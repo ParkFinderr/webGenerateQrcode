@@ -16,9 +16,16 @@ const Dashboard = () => {
   const [appState, setAppState] = useState('idle');
   const [ticketData, setTicketData] = useState(null);
   const [vehicleType, setVehicleType] = useState('motor');
+  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes countdown
   
   const ticketId = ticketData?.ticketId || null;
   const { status: firestoreStatus } = useTicketListener(ticketId);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -48,6 +55,25 @@ const Dashboard = () => {
     }
   }, [appState, firestoreStatus]);
 
+  // Countdown timer effect
+  useEffect(() => {
+    let interval = null;
+    if (appState === 'generated' && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (appState === 'generated' && timeLeft === 0) {
+      setTimeout(() => {
+        setAppState('idle');
+        setTicketData(null);
+      }, 0);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [appState, timeLeft]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -61,6 +87,7 @@ const Dashboard = () => {
     }
 
     setAppState('loading');
+    setTimeLeft(600); // reset timer
     
     try {
       const response = await api.post('/gate/generateTicket', {
@@ -166,23 +193,26 @@ const Dashboard = () => {
             )}
 
             {appState === 'generated' && ticketData && (
-              <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <div className="bg-white p-6 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 mb-8 transition-transform hover:scale-105 duration-500">
+              <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500 mt-4">
+                <div className="bg-white p-4 rounded-[1.5rem] shadow-[0_4px_24px_rgb(0,0,0,0.06)] mb-6 transition-transform hover:scale-105 duration-500 inline-block">
                   <QRCodeSVG 
                     value={ticketData.qrCode} 
-                    size={280}
-                    level="H"
-                    includeMargin={false}
+                    size={220}
+                    level="M"
+                    includeMargin={true}
                     className="rounded-xl"
                   />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">Scan QR Code Ini</h2>
-                <p className="text-gray-500 font-medium text-lg">Silakan scan menggunakan aplikasi Parkfinder</p>
+                
+                <p className="text-gray-600 text-sm font-medium mb-5">
+                  Masa berlaku: <span className="font-semibold text-gray-800">{formatTime(timeLeft)}</span>
+                </p>
+                
                 <button 
-                  onClick={() => { setAppState('idle'); setTicketData(null); }}
-                  className="mt-8 px-6 py-2 rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-900 font-medium transition-all duration-200"
+                  onClick={handleGenerateTicket}
+                  className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 text-sm font-medium shadow-sm hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-200"
                 >
-                  Batalkan
+                  Regenerate QR
                 </button>
               </div>
             )}
