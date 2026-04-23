@@ -5,10 +5,16 @@ import { db } from '../config/firebase';
 export const useTicketListener = (ticketId) => {
   const [status, setStatus] = useState(null);
   const [error, setError] = useState(null);
+  const [prevTicketId, setPrevTicketId] = useState(ticketId);
+
+  if (ticketId !== prevTicketId) {
+    setPrevTicketId(ticketId);
+    setStatus(null);
+    setError(null);
+  }
 
   useEffect(() => {
     if (!ticketId) {
-      setStatus(null);
       return;
     }
 

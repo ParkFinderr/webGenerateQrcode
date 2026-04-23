@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { LogOut, QrCode, CheckCircle, Car, Bike } from 'lucide-react';
@@ -7,7 +7,10 @@ import { useTicketListener } from '../hooks/useTicketListener';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user] = useState(() => {
+    const userDataStr = localStorage.getItem('user');
+    return userDataStr ? JSON.parse(userDataStr) : null;
+  });
   
   // App state: 'idle' | 'loading' | 'generated' | 'claimed'
   const [appState, setAppState] = useState('idle');
@@ -18,27 +21,19 @@ const Dashboard = () => {
   const { status: firestoreStatus } = useTicketListener(ticketId);
 
   useEffect(() => {
-    const userDataStr = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     
-    if (!token || !userDataStr) {
-      navigate('/login');
-      return;
-    }
-    
-    try {
-      setUser(JSON.parse(userDataStr));
-    } catch (e) {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+    if (!token || !user) {
       navigate('/login');
     }
-  }, [navigate]);
+  }, [navigate, user]);
 
   // Monitor firestore status
   useEffect(() => {
     if (appState === 'generated' && firestoreStatus === 'claimed') {
-      setAppState('claimed');
+      const timer0 = setTimeout(() => {
+        setAppState('claimed');
+      }, 0);
       
       // Reset back to idle after 3 seconds
       const timer = setTimeout(() => {
@@ -46,7 +41,10 @@ const Dashboard = () => {
         setTicketData(null);
       }, 3000);
       
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer0);
+        clearTimeout(timer);
+      };
     }
   }, [appState, firestoreStatus]);
 
