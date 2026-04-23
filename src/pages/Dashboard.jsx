@@ -84,27 +84,28 @@ const Dashboard = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col font-sans">
       {/* Header */}
-      <header className="bg-white shadow-sm px-6 py-4 flex justify-between items-center border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="bg-blue-600 p-2 rounded-lg">
+      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 px-8 py-5 flex justify-between items-center border-b border-gray-100">
+        <div className="flex items-center space-x-4">
+          <div className="bg-gray-900 p-2.5 rounded-xl shadow-sm rotate-3">
             <QrCode className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Gate Display</h1>
-            <p className="text-sm text-gray-500">Area: {user.managedAreaId}</p>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Gate Display</h1>
+            <p className="text-sm text-gray-500 font-medium">Area: <span className="text-gray-900">{user.managedAreaId}</span></p>
           </div>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-5">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-gray-800">{user.name}</p>
-            <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+            <p className="text-sm font-bold text-gray-900">{user.name}</p>
+            <p className="text-xs text-gray-500 capitalize font-medium">{user.role}</p>
           </div>
+          <div className="h-8 w-px bg-gray-200 hidden sm:block"></div>
           <button 
             onClick={handleLogout}
-            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
             title="Logout"
           >
             <LogOut className="w-5 h-5" />
@@ -113,24 +114,24 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6">
-        <div className="bg-white rounded-3xl shadow-xl w-full max-w-2xl p-8 min-h-[500px] flex flex-col relative overflow-hidden">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10">
+        <div className="bg-white rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 w-full max-w-2xl p-10 sm:p-12 min-h-[500px] flex flex-col relative overflow-hidden">
           
           {/* Top Controls (Visible when not claimed/loading) */}
           {(appState === 'idle' || appState === 'generated') && (
-             <div className="flex justify-center space-x-4 mb-8">
+             <div className="flex justify-center space-x-4 mb-10">
               <button 
                 onClick={() => setVehicleType('motor')}
-                className={`flex items-center px-6 py-3 rounded-xl border-2 font-medium transition-all ${vehicleType === 'motor' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                className={`flex items-center px-8 py-3.5 rounded-2xl font-bold transition-all duration-200 ${vehicleType === 'motor' ? 'bg-gray-900 text-white shadow-md hover:-translate-y-0.5' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
               >
-                <Bike className="w-5 h-5 mr-2" />
+                <Bike className="w-5 h-5 mr-2.5" />
                 Motor
               </button>
               <button 
                 onClick={() => setVehicleType('mobil')}
-                className={`flex items-center px-6 py-3 rounded-xl border-2 font-medium transition-all ${vehicleType === 'mobil' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                className={`flex items-center px-8 py-3.5 rounded-2xl font-bold transition-all duration-200 ${vehicleType === 'mobil' ? 'bg-gray-900 text-white shadow-md hover:-translate-y-0.5' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
               >
-                <Car className="w-5 h-5 mr-2" />
+                <Car className="w-5 h-5 mr-2.5" />
                 Mobil
               </button>
             </div>
@@ -141,16 +142,16 @@ const Dashboard = () => {
             
             {appState === 'idle' && (
               <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center mb-6">
-                  <QrCode className="w-16 h-16 text-blue-500 opacity-50" />
+                <div className="w-28 h-28 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+                  <QrCode className="w-12 h-12 text-gray-300" />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-4">Siap Menerima Pengunjung</h2>
-                <p className="text-gray-500 mb-8 max-w-md">
+                <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">Siap Menerima Pengunjung</h2>
+                <p className="text-gray-500 font-medium mb-10 max-w-md">
                   Pilih tipe kendaraan di atas, lalu tekan tombol di bawah untuk menghasilkan QR Code tiket.
                 </p>
                 <button
                   onClick={handleGenerateTicket}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-full text-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                  className="bg-gray-900 hover:bg-black text-white font-bold py-4 px-12 rounded-2xl text-lg shadow-[0_8px_20px_rgb(0,0,0,0.12)] hover:shadow-[0_12px_25px_rgb(0,0,0,0.2)] transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
                 >
                   Generate QR Ticket
                 </button>
@@ -159,39 +160,41 @@ const Dashboard = () => {
 
             {appState === 'loading' && (
               <div className="flex flex-col items-center">
-                <div className="w-24 h-24 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-6"></div>
-                <h2 className="text-2xl font-bold text-gray-800 animate-pulse">Menghasilkan Tiket...</h2>
+                <div className="w-20 h-20 border-[3px] border-gray-100 border-t-gray-900 rounded-full animate-spin mb-8"></div>
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight animate-pulse">Menghasilkan Tiket...</h2>
               </div>
             )}
 
             {appState === 'generated' && ticketData && (
               <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-500">
-                <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 mb-6">
+                <div className="bg-white p-6 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 mb-8 transition-transform hover:scale-105 duration-500">
                   <QRCodeSVG 
                     value={ticketData.qrCode} 
-                    size={300}
+                    size={280}
                     level="H"
-                    includeMargin={true}
+                    includeMargin={false}
+                    className="rounded-xl"
                   />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Scan QR Code Ini</h2>
-                <p className="text-gray-500 text-lg">Silakan scan menggunakan aplikasi Parkfinder</p>
+                <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">Scan QR Code Ini</h2>
+                <p className="text-gray-500 font-medium text-lg">Silakan scan menggunakan aplikasi Parkfinder</p>
                 <button 
                   onClick={() => { setAppState('idle'); setTicketData(null); }}
-                  className="mt-6 text-gray-400 hover:text-gray-600 underline"
+                  className="mt-8 px-6 py-2 rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-900 font-medium transition-all duration-200"
                 >
-                  Batal / Kembali
+                  Batalkan
                 </button>
               </div>
             )}
 
             {appState === 'claimed' && (
               <div className="flex flex-col items-center animate-in zoom-in-50 duration-500">
-                <div className="w-40 h-40 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-pulse">
-                  <CheckCircle className="w-24 h-24 text-green-500" />
+                <div className="w-32 h-32 bg-green-50 rounded-full flex items-center justify-center mb-8 relative">
+                  <div className="absolute inset-0 border-4 border-green-500 rounded-full animate-ping opacity-20"></div>
+                  <CheckCircle className="w-16 h-16 text-green-500" />
                 </div>
-                <h2 className="text-4xl font-black text-green-600 mb-2">Sukses!</h2>
-                <p className="text-gray-600 text-xl font-medium">Silakan Masuk</p>
+                <h2 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Sukses!</h2>
+                <p className="text-green-600 text-xl font-bold">Silakan Masuk</p>
               </div>
             )}
 
