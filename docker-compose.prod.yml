@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  web-generate-qrcode-prod:
+    build:
+      context: .
+      target: production
+    container_name: parkfinder-kiosk-prod
+    ports:
+      - "8080:8080"
+    restart: always
+    environment:
+      - NODE_ENV=production

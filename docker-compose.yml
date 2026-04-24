@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web-generate-qrcode-dev:
+    build:
+      context: .
+      target: development
+    container_name: parkfinder-kiosk-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules # Prevents local node_modules from overwriting container's node_modules
+    environment:
+      - NODE_ENV=development
+    # Ensure vite runs with host exposed to docker network
+    command: npm run dev -- --host
