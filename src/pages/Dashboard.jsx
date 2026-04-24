@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { LogOut, QrCode, CheckCircle, Car, Bike } from 'lucide-react';
+import { LogOut, QrCode, CheckCircle, CarFront, Bike, AlertCircle } from 'lucide-react';
 import api from '../config/axios';
 import { useTicketListener } from '../hooks/useTicketListener';
 
@@ -11,13 +11,13 @@ const Dashboard = () => {
     const userDataStr = localStorage.getItem('user');
     return userDataStr ? JSON.parse(userDataStr) : null;
   });
-  
-  // App state: 'idle' | 'loading' | 'generated' | 'claimed'
+
+  // State aplikasi: 'idle' | 'loading' | 'generated' | 'claimed'
   const [appState, setAppState] = useState('idle');
   const [ticketData, setTicketData] = useState(null);
   const [vehicleType, setVehicleType] = useState('motor');
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes countdown
-  
+  const [timeLeft, setTimeLeft] = useState(600); // 10 menit
+
   const ticketId = ticketData?.ticketId || null;
   const { status: firestoreStatus } = useTicketListener(ticketId);
 
@@ -27,50 +27,54 @@ const Dashboard = () => {
     return `${m}:${s}`;
   };
 
+  // Proteksi Rute
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
     if (!token || !user) {
       navigate('/login');
     }
   }, [navigate, user]);
 
-  // Monitor firestore status
+  // Memantau status Firestore (Real-time)
   useEffect(() => {
     if (appState === 'generated' && firestoreStatus === 'claimed') {
+      // Menggunakan setTimeout 0 untuk menghindari sinkronisasi setState di dalam Effect
       const timer0 = setTimeout(() => {
         setAppState('claimed');
       }, 0);
-      
-      // Reset back to idle after 3 seconds
-      const timer = setTimeout(() => {
+
+      // Reset otomatis ke halaman awal setelah 3 detik sukses
+      const timer1 = setTimeout(() => {
         setAppState('idle');
         setTicketData(null);
       }, 3000);
-      
+
       return () => {
         clearTimeout(timer0);
-        clearTimeout(timer);
+        clearTimeout(timer1);
       };
     }
   }, [appState, firestoreStatus]);
 
-  // Countdown timer effect
+  // Logika Timer Countdown
   useEffect(() => {
     let interval = null;
+    let timeout0 = null;
+
     if (appState === 'generated' && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (appState === 'generated' && timeLeft === 0) {
-      setTimeout(() => {
+      timeout0 = setTimeout(() => {
         setAppState('idle');
         setTicketData(null);
       }, 0);
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
+      if (timeout0) clearTimeout(timeout0);
     };
   }, [appState, timeLeft]);
 
@@ -82,27 +86,27 @@ const Dashboard = () => {
 
   const handleGenerateTicket = async () => {
     if (!user?.managedAreaId) {
-      alert('Admin tidak memiliki area yang diurus.');
+      alert('Admin tidak memiliki area yang dikelola.');
       return;
     }
 
     setAppState('loading');
-    setTimeLeft(600); // reset timer
-    
+    setTimeLeft(600); // Reset timer ke 10 menit
+
     try {
       const response = await api.post('/gate/generateTicket', {
         areaId: user.managedAreaId,
         vehicleType
       });
-      
+
       if (response.data?.data) {
         setTicketData(response.data.data);
         setAppState('generated');
       } else {
-        throw new Error('Format response invalid');
+        throw new Error('Format respons tidak valid');
       }
     } catch (err) {
-      console.error('Failed to generate ticket', err);
+      console.error('Gagal generate tiket:', err);
       alert(err.response?.data?.message || 'Gagal generate tiket');
       setAppState('idle');
     }
@@ -110,121 +114,136 @@ const Dashboard = () => {
 
   if (!user) return null;
 
+  const isTimeRunningOut = timeLeft < 60; // Peringatan jika waktu < 1 menit
+
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col font-sans">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 px-8 py-5 flex justify-between items-center border-b border-gray-100">
+    <div className="min-h-screen bg-[#F4F7F6] flex flex-col font-sans selection:bg-emerald-200">
+      {/* Header Navigation */}
+      <header className="bg-white/90 backdrop-blur-xl sticky top-0 z-10 px-6 sm:px-10 py-4 flex justify-between items-center shadow-sm border-b border-emerald-50">
         <div className="flex items-center space-x-4">
-          <div className="bg-gray-900 p-2.5 rounded-xl shadow-sm rotate-3">
+          <div className="bg-emerald-600 p-2.5 rounded-xl shadow-lg shadow-emerald-600/20">
             <QrCode className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Gate Display</h1>
-            <p className="text-sm text-gray-500 font-medium">Area: <span className="text-gray-900">{user.managedAreaId}</span></p>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">ParkFinder</h1>
+            <p className="text-sm text-emerald-600 font-semibold flex items-center">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
+              Area: {user.managedAreaId}
+            </p>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-5">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-bold text-gray-900">{user.name}</p>
             <p className="text-xs text-gray-500 capitalize font-medium">{user.role}</p>
           </div>
           <div className="h-8 w-px bg-gray-200 hidden sm:block"></div>
-          <button 
+          <button
             onClick={handleLogout}
-            className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-200"
-            title="Logout"
+            className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
+            title="Keluar"
           >
             <LogOut className="w-5 h-5" />
           </button>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Konten Utama */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10">
-        <div className="bg-white rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 w-full max-w-2xl p-10 sm:p-12 min-h-[500px] flex flex-col relative overflow-hidden">
-          
-          {/* Top Controls (Visible when not claimed/loading) */}
+        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)] border border-emerald-50/50 w-full max-w-lg p-8 sm:p-12 min-h-[550px] flex flex-col relative overflow-hidden">
+
+          {/* Segmented Control Kendaraan */}
           {(appState === 'idle' || appState === 'generated') && (
-             <div className="flex justify-center space-x-4 mb-10">
-              <button 
+            <div className="flex bg-gray-100 p-1.5 rounded-2xl mb-10 mx-auto w-full max-w-sm shadow-inner">
+              <button
                 onClick={() => setVehicleType('motor')}
-                className={`flex items-center px-8 py-3.5 rounded-2xl font-bold transition-all duration-200 ${vehicleType === 'motor' ? 'bg-gray-900 text-white shadow-md hover:-translate-y-0.5' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+                className={`flex-1 flex justify-center items-center py-3 rounded-xl font-bold transition-all duration-300 ${vehicleType === 'motor' ? 'bg-white text-emerald-600 shadow-[0_4px_12px_rgba(0,0,0,0.05)]' : 'text-gray-400 hover:text-gray-600'}`}
               >
-                <Bike className="w-5 h-5 mr-2.5" />
+                <Bike className={`w-5 h-5 mr-2 ${vehicleType === 'motor' ? 'text-emerald-500' : ''}`} />
                 Motor
               </button>
-              <button 
+              <button
                 onClick={() => setVehicleType('mobil')}
-                className={`flex items-center px-8 py-3.5 rounded-2xl font-bold transition-all duration-200 ${vehicleType === 'mobil' ? 'bg-gray-900 text-white shadow-md hover:-translate-y-0.5' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+                className={`flex-1 flex justify-center items-center py-3 rounded-xl font-bold transition-all duration-300 ${vehicleType === 'mobil' ? 'bg-white text-emerald-600 shadow-[0_4px_12px_rgba(0,0,0,0.05)]' : 'text-gray-400 hover:text-gray-600'}`}
               >
-                <Car className="w-5 h-5 mr-2.5" />
+                <CarFront className={`w-5 h-5 mr-2 ${vehicleType === 'mobil' ? 'text-emerald-500' : ''}`} />
                 Mobil
               </button>
             </div>
           )}
 
-          {/* Dynamic Area Display */}
           <div className="flex-1 flex flex-col items-center justify-center text-center">
-            
+
+            {/* Tampilan IDLE */}
             {appState === 'idle' && (
-              <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
-                <div className="w-28 h-28 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                  <QrCode className="w-12 h-12 text-gray-300" />
+              <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300 w-full">
+                <div className="w-32 h-32 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
+                  <QrCode className="w-14 h-14 text-emerald-400" />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">Siap Menerima Pengunjung</h2>
-                <p className="text-gray-500 font-medium mb-10 max-w-md">
-                  Pilih tipe kendaraan di atas, lalu tekan tombol di bawah untuk menghasilkan QR Code tiket.
+                <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">Siap Melayani</h2>
+                <p className="text-gray-500 font-medium mb-10 max-w-xs">
+                  Pilih tipe kendaraan di atas, lalu buat QR Code untuk pengunjung.
                 </p>
                 <button
                   onClick={handleGenerateTicket}
-                  className="bg-gray-900 hover:bg-black text-white font-bold py-4 px-12 rounded-2xl text-lg shadow-[0_8px_20px_rgb(0,0,0,0.12)] hover:shadow-[0_12px_25px_rgb(0,0,0,0.2)] transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-5 px-8 rounded-2xl text-lg shadow-[0_10px_20px_rgba(16,185,129,0.25)] hover:shadow-[0_15px_30px_rgba(16,185,129,0.35)] transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
                 >
-                  Generate QR Ticket
+                  Buat Tiket QR
                 </button>
               </div>
             )}
 
+            {/* Tampilan LOADING */}
             {appState === 'loading' && (
               <div className="flex flex-col items-center">
-                <div className="w-20 h-20 border-[3px] border-gray-100 border-t-gray-900 rounded-full animate-spin mb-8"></div>
-                <h2 className="text-2xl font-bold text-gray-900 tracking-tight animate-pulse">Menghasilkan Tiket...</h2>
+                <div className="w-24 h-24 border-4 border-emerald-50 border-t-emerald-500 rounded-full animate-spin mb-8"></div>
+                <h2 className="text-xl font-bold text-gray-900 tracking-tight animate-pulse">Menghasilkan Tiket...</h2>
               </div>
             )}
 
+            {/* Tampilan GENERATED (Kartu QR) */}
             {appState === 'generated' && ticketData && (
-              <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500 mt-4">
-                <div className="bg-white p-4 rounded-[1.5rem] shadow-[0_4px_24px_rgb(0,0,0,0.06)] mb-6 transition-transform hover:scale-105 duration-500 inline-block">
-                  <QRCodeSVG 
-                    value={ticketData.qrCode} 
-                    size={220}
-                    level="M"
-                    includeMargin={true}
-                    className="rounded-xl"
-                  />
+              <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500 w-full mt-2">
+                {/* Desain Kartu Tiket */}
+                <div className="bg-white p-5 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.08)] border border-gray-100 mb-8 relative">
+                  <div className="absolute -left-4 top-1/2 -mt-4 w-8 h-8 bg-[#F4F7F6] rounded-full border-r border-gray-100"></div>
+                  <div className="absolute -right-4 top-1/2 -mt-4 w-8 h-8 bg-[#F4F7F6] rounded-full border-l border-gray-100"></div>
+
+                  <div className="border-4 border-emerald-50 rounded-3xl p-4">
+                    <QRCodeSVG
+                      value={ticketData.qrCode}
+                      size={240}
+                      level="H"
+                      includeMargin={true}
+                      className="rounded-xl"
+                    />
+                  </div>
                 </div>
-                
-                <p className="text-gray-600 text-sm font-medium mb-5">
-                  Masa berlaku: <span className="font-semibold text-gray-800">{formatTime(timeLeft)}</span>
-                </p>
-                
-                <button 
+
+                <div className={`flex items-center px-6 py-3 rounded-full mb-6 font-bold text-lg transition-colors duration-300 ${isTimeRunningOut ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-emerald-50 text-emerald-700'}`}>
+                  {isTimeRunningOut && <AlertCircle className="w-5 h-5 mr-2" />}
+                  Sisa Waktu: {formatTime(timeLeft)}
+                </div>
+
+                <button
                   onClick={handleGenerateTicket}
-                  className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 text-sm font-medium shadow-sm hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-200"
+                  className="text-gray-400 hover:text-gray-700 font-semibold underline underline-offset-4 transition-colors"
                 >
-                  Regenerate QR
+                  Batalkan & Refresh
                 </button>
               </div>
             )}
 
+            {/* Tampilan CLAIMED (Sukses) */}
             {appState === 'claimed' && (
               <div className="flex flex-col items-center animate-in zoom-in-50 duration-500">
-                <div className="w-32 h-32 bg-green-50 rounded-full flex items-center justify-center mb-8 relative">
-                  <div className="absolute inset-0 border-4 border-green-500 rounded-full animate-ping opacity-20"></div>
-                  <CheckCircle className="w-16 h-16 text-green-500" />
+                <div className="w-40 h-40 bg-emerald-50 rounded-full flex items-center justify-center mb-8 relative">
+                  <div className="absolute inset-0 border-[6px] border-emerald-400 rounded-full animate-ping opacity-30"></div>
+                  <CheckCircle className="w-20 h-20 text-emerald-500" />
                 </div>
-                <h2 className="text-4xl font-black text-gray-900 tracking-tight mb-2">Sukses!</h2>
-                <p className="text-green-600 text-xl font-bold">Silakan Masuk</p>
+                <h2 className="text-4xl font-black text-gray-900 tracking-tight mb-3">Sukses!</h2>
+                <p className="text-emerald-600 text-xl font-bold bg-emerald-50 px-6 py-2 rounded-full">Gerbang Terbuka</p>
               </div>
             )}
 

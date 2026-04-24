@@ -1,8 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
   html {
@@ -16,30 +14,35 @@
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     animation-fill-mode: forwards;
   }
-  
+
   .fade-in {
     opacity: 0;
     animation-name: fadeIn;
   }
-  
+
   .zoom-in {
     transform: scale(0.95);
     animation-name: zoomIn;
   }
-  
+
   .zoom-in-50 {
     transform: scale(0.5);
     animation-name: zoomIn;
   }
-  
+
   .slide-in-from-bottom-8 {
     transform: translateY(2rem);
     animation-name: slideInFromBottom;
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes zoomIn {
@@ -47,6 +50,7 @@
       opacity: 0;
       transform: scale(var(--tw-enter-scale, 0.95));
     }
+
     to {
       opacity: 1;
       transform: scale(1);
@@ -58,6 +62,7 @@
       opacity: 0;
       transform: translateY(2rem);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
