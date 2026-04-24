@@ -1,16 +1,44 @@
-# React + Vite
+# Generate QR Code ParkFinder (Kiosk)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplikasi frontend untuk mengelola pembuatan QR Code tiket parkir secara dinamis. Aplikasi ini digunakan oleh admin di area parkir (Gate Display) untuk mencetak tiket QR bagi pengunjung.
 
-Currently, two official plugins are available:
+## ✨ Fitur Utama
+- **Login Admin**: Akses khusus untuk petugas gerbang.
+- **Generate QR Code**: Membuat tiket QR secara otomatis untuk kendaraan (Mobil).
+- **Status Real-time**: Mendeteksi secara instan kapan tiket dipindai menggunakan Firebase Firestore.
+- **Support Docker**: Mudah dijalankan di lingkungan lokal maupun production (GCP VM).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Tech Stack
+- **Frontend**: React 19 + Vite
+- **Styling**: Tailwind CSS v4
+- **Database**: Firebase Firestore (Real-time listener)
+- **Container**: Docker & Docker Compose
 
-## React Compiler
+## 🚀 Cara Menjalankan
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Persiapan Environment
+Buat file `.env` dan isi dengan konfigurasi berikut:
+```env
+VITE_API_BASE_URL=
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+```
 
-## Expanding the ESLint configuration
+### 2. Jalankan dengan Docker
+- **Mode Development (Lokal):**
+  ```bash
+  docker-compose up --build
+  ```
+- **Mode Production (GCP VM):**
+  ```bash
+  docker-compose -f docker-compose.prod.yml up -d --build
+  ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📁 Struktur Folder
+- `src/pages`: Halaman Login dan Dashboard.
+- `src/config`: Konfigurasi Axios dan Firebase.
+- `src/hooks`: Hook untuk mendengarkan perubahan status tiket di Firestore.
