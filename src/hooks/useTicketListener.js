@@ -19,7 +19,7 @@ export const useTicketListener = (ticketId) => {
     }
 
     const ticketRef = doc(db, 'tickets', ticketId);
-    
+
     const unsubscribe = onSnapshot(
       ticketRef,
       (docSnap) => {
@@ -36,7 +36,6 @@ export const useTicketListener = (ticketId) => {
     );
 
     return () => {
-      // Unsubscribe on unmount or ticketId change
       unsubscribe();
     };
   }, [ticketId]);

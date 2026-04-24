@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { LogOut, QrCode, CheckCircle, CarFront, Bike, AlertCircle } from 'lucide-react';
+import { LogOut, QrCode, CheckCircle, CarFront, AlertCircle } from 'lucide-react';
 import api from '../config/axios';
 import { useTicketListener } from '../hooks/useTicketListener';
 
@@ -12,11 +12,10 @@ const Dashboard = () => {
     return userDataStr ? JSON.parse(userDataStr) : null;
   });
 
-  // State aplikasi: 'idle' | 'loading' | 'generated' | 'claimed'
   const [appState, setAppState] = useState('idle');
   const [ticketData, setTicketData] = useState(null);
-  const [vehicleType, setVehicleType] = useState('motor');
-  const [timeLeft, setTimeLeft] = useState(600); // 10 menit
+  const [vehicleType, setVehicleType] = useState('mobil');
+  const [timeLeft, setTimeLeft] = useState(600);
 
   const ticketId = ticketData?.ticketId || null;
   const { status: firestoreStatus } = useTicketListener(ticketId);
@@ -27,7 +26,6 @@ const Dashboard = () => {
     return `${m}:${s}`;
   };
 
-  // Proteksi Rute
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token || !user) {
@@ -35,15 +33,12 @@ const Dashboard = () => {
     }
   }, [navigate, user]);
 
-  // Memantau status Firestore (Real-time)
   useEffect(() => {
     if (appState === 'generated' && firestoreStatus === 'claimed') {
-      // Menggunakan setTimeout 0 untuk menghindari sinkronisasi setState di dalam Effect
       const timer0 = setTimeout(() => {
         setAppState('claimed');
       }, 0);
 
-      // Reset otomatis ke halaman awal setelah 3 detik sukses
       const timer1 = setTimeout(() => {
         setAppState('idle');
         setTicketData(null);
@@ -56,7 +51,6 @@ const Dashboard = () => {
     }
   }, [appState, firestoreStatus]);
 
-  // Logika Timer Countdown
   useEffect(() => {
     let interval = null;
     let timeout0 = null;
@@ -91,8 +85,7 @@ const Dashboard = () => {
     }
 
     setAppState('loading');
-    setTimeLeft(600); // Reset timer ke 10 menit
-
+    setTimeLeft(600);
     try {
       const response = await api.post('/gate/generateTicket', {
         areaId: user.managedAreaId,
@@ -114,7 +107,7 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  const isTimeRunningOut = timeLeft < 60; // Peringatan jika waktu < 1 menit
+  const isTimeRunningOut = timeLeft < 60;
 
   return (
     <div className="min-h-screen bg-[#F4F7F6] flex flex-col font-sans selection:bg-emerald-200">
@@ -149,20 +142,19 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Konten Utama */}
+      {/* konten utama */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10">
         <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)] border border-emerald-50/50 w-full max-w-lg p-8 sm:p-12 min-h-[550px] flex flex-col relative overflow-hidden">
 
-          {/* Segmented Control Kendaraan */}
           {(appState === 'idle' || appState === 'generated') && (
             <div className="flex bg-gray-100 p-1.5 rounded-2xl mb-10 mx-auto w-full max-w-sm shadow-inner">
-              <button
+              {/* <button
                 onClick={() => setVehicleType('motor')}
                 className={`flex-1 flex justify-center items-center py-3 rounded-xl font-bold transition-all duration-300 ${vehicleType === 'motor' ? 'bg-white text-emerald-600 shadow-[0_4px_12px_rgba(0,0,0,0.05)]' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 <Bike className={`w-5 h-5 mr-2 ${vehicleType === 'motor' ? 'text-emerald-500' : ''}`} />
                 Motor
-              </button>
+              </button> */}
               <button
                 onClick={() => setVehicleType('mobil')}
                 className={`flex-1 flex justify-center items-center py-3 rounded-xl font-bold transition-all duration-300 ${vehicleType === 'mobil' ? 'bg-white text-emerald-600 shadow-[0_4px_12px_rgba(0,0,0,0.05)]' : 'text-gray-400 hover:text-gray-600'}`}
@@ -183,7 +175,7 @@ const Dashboard = () => {
                 </div>
                 <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">Siap Melayani</h2>
                 <p className="text-gray-500 font-medium mb-10 max-w-xs">
-                  Pilih tipe kendaraan di atas, lalu buat QR Code untuk pengunjung.
+                  Silahkan Scan QR Code untuk Parkir.
                 </p>
                 <button
                   onClick={handleGenerateTicket}
@@ -205,7 +197,6 @@ const Dashboard = () => {
             {/* Tampilan GENERATED (Kartu QR) */}
             {appState === 'generated' && ticketData && (
               <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500 w-full mt-2">
-                {/* Desain Kartu Tiket */}
                 <div className="bg-white p-5 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.08)] border border-gray-100 mb-8 relative">
                   <div className="absolute -left-4 top-1/2 -mt-4 w-8 h-8 bg-[#F4F7F6] rounded-full border-r border-gray-100"></div>
                   <div className="absolute -right-4 top-1/2 -mt-4 w-8 h-8 bg-[#F4F7F6] rounded-full border-l border-gray-100"></div>

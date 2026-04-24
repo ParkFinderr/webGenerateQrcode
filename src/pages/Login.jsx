@@ -36,7 +36,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-emerald-50 via-white to-teal-50 px-4">
       <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(16,185,129,0.15)] border border-emerald-50">
 
-        {/* Ikon Logo */}
+        {/* logo */}
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 bg-emerald-100/50 rounded-3xl flex items-center justify-center shadow-inner">
             <div className="w-14 h-14 bg-emerald-600 rounded-xl flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-300 shadow-lg shadow-emerald-600/30">
