@@ -47,7 +47,7 @@ const Login = () => {
 
         <div className="text-center mb-10">
           <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">ParkFinder</h2>
-          <p className="text-emerald-600 font-medium mt-1">Akses Gerbang Utama</p>
+          <p className="text-emerald-600 font-medium mt-1">Akses Gerbang Parkir</p>
         </div>
 
         {error && (
@@ -90,7 +90,7 @@ const Login = () => {
               <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
             ) : (
               <>
-                Masuk Sistem
+                Masuk
                 <LogIn className="w-5 h-5 ml-2" />
               </>
             )}

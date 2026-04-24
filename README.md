@@ -1,4 +1,4 @@
-# Generate QR Code ParkFinder (Kiosk)
+# Generate QR Code ParkFinder
 
 Aplikasi frontend untuk mengelola pembuatan QR Code tiket parkir secara dinamis. Aplikasi ini digunakan oleh admin di area parkir (Gate Display) untuk mencetak tiket QR bagi pengunjung.
 
