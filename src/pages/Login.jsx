@@ -1,7 +1,7 @@
+import { LogIn, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/axios';
-import { LogIn, ShieldCheck } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -21,6 +21,28 @@ const Login = () => {
         const { token, user } = response.data.data;
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
+        
+        // Fetch areas untuk admin - untuk dapatkan list area yang bisa di-kelola
+        try {
+          const areasResponse = await api.get('/areas', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (areasResponse.data?.data) {
+            // Simpan areas ke localStorage
+            localStorage.setItem('adminAreas', JSON.stringify(areasResponse.data.data));
+            // Jika admin punya managed area, set sebagai default
+            if (user.managedAreaId) {
+              localStorage.setItem('selectedAreaId', user.managedAreaId);
+            } else if (areasResponse.data.data.length > 0) {
+              // Auto-select area pertama jika tidak ada managed area
+              localStorage.setItem('selectedAreaId', areasResponse.data.data[0].id);
+            }
+          }
+        } catch (areaErr) {
+          console.warn('Gagal fetch areas:', areaErr);
+          // Fallback: gunakan area pertama atau skip jika tidak ada
+        }
+        
         navigate('/');
       } else {
         setError(response.data.message || 'Login failed');

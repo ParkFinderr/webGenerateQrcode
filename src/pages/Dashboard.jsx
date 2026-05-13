@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { AlertCircle, CarFront, CheckCircle, LogOut, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { LogOut, QrCode, CheckCircle, CarFront, AlertCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../config/axios';
 import { useTicketListener } from '../hooks/useTicketListener';
 
@@ -16,6 +16,11 @@ const Dashboard = () => {
   const [ticketData, setTicketData] = useState(null);
   const [vehicleType, setVehicleType] = useState('mobil');
   const [timeLeft, setTimeLeft] = useState(600);
+  
+  // Area management
+  const [adminAreas, setAdminAreas] = useState([]);
+  const [selectedAreaId, setSelectedAreaId] = useState(localStorage.getItem('selectedAreaId') || '');
+  const [loadingAreas, setLoadingAreas] = useState(false);
 
   const ticketId = ticketData?.ticketId || null;
   const { status: firestoreStatus } = useTicketListener(ticketId);
@@ -30,6 +35,34 @@ const Dashboard = () => {
     const token = localStorage.getItem('token');
     if (!token || !user) {
       navigate('/login');
+      return;
+    }
+    
+    // Load areas dari localStorage atau fetch dari API
+    const savedAreas = localStorage.getItem('adminAreas');
+    if (savedAreas) {
+      const areas = JSON.parse(savedAreas);
+      setAdminAreas(areas);
+      if (!selectedAreaId && areas.length > 0) {
+        setSelectedAreaId(areas[0].id);
+        localStorage.setItem('selectedAreaId', areas[0].id);
+      }
+    } else {
+      // Fetch areas dari API jika belum tersimpan
+      setLoadingAreas(true);
+      api.get('/areas')
+        .then(res => {
+          if (res.data?.data) {
+            setAdminAreas(res.data.data);
+            if (res.data.data.length > 0 && !selectedAreaId) {
+              const defaultArea = res.data.data[0].id;
+              setSelectedAreaId(defaultArea);
+              localStorage.setItem('selectedAreaId', defaultArea);
+            }
+          }
+        })
+        .catch(err => console.error('Gagal fetch areas:', err))
+        .finally(() => setLoadingAreas(false));
     }
   }, [navigate, user]);
 
@@ -85,8 +118,8 @@ const Dashboard = () => {
   };
 
   const handleGenerateTicket = async () => {
-    if (!user?.managedAreaId) {
-      alert('Admin tidak memiliki area yang dikelola.');
+    if (!selectedAreaId) {
+      alert('Silahkan pilih area terlebih dahulu.');
       return;
     }
 
@@ -94,7 +127,7 @@ const Dashboard = () => {
     setTimeLeft(600);
     try {
       const response = await api.post('/gate/generateTicket', {
-        areaId: user.managedAreaId,
+        areaId: selectedAreaId,
         vehicleType
       });
 
@@ -125,10 +158,30 @@ const Dashboard = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">ParkFinder</h1>
-            <p className="text-sm text-emerald-600 font-semibold flex items-center">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
-              Area: {user.managedAreaId}
-            </p>
+            <div className="flex items-center space-x-2">
+              {loadingAreas ? (
+                <p className="text-sm text-gray-500 font-semibold">Memuat area...</p>
+              ) : adminAreas.length > 0 ? (
+                <select
+                  value={selectedAreaId}
+                  onChange={(e) => {
+                    setSelectedAreaId(e.target.value);
+                    localStorage.setItem('selectedAreaId', e.target.value);
+                  }}
+                  className="text-sm text-emerald-600 font-semibold bg-emerald-50 border-0 rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                >
+                  <option value="">Pilih Area...</option>
+                  {adminAreas.map((area) => (
+                    <option key={area.id} value={area.id}>
+                      {area.name || area.id}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-sm text-red-500 font-semibold">Tidak ada area tersedia</p>
+              )}
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
           </div>
         </div>
 
@@ -152,7 +205,41 @@ const Dashboard = () => {
       <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10">
         <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)] border border-emerald-50/50 w-full max-w-lg p-8 sm:p-12 min-h-[550px] flex flex-col relative overflow-hidden">
 
-          {(appState === 'idle' || appState === 'generated') && (
+          {/* Area selector message */}
+          {!selectedAreaId && !loadingAreas && adminAreas.length > 0 && (
+            <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700 rounded-r text-sm font-medium animate-in fade-in slide-in-from-bottom-2">
+              Silahkan pilih area dari dropdown di atas untuk memulai generate tiket.
+            </div>
+          )}
+
+          {/* Loading areas state */}
+          {loadingAreas && (
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="w-24 h-24 border-4 border-emerald-50 border-t-emerald-500 rounded-full animate-spin mb-8"></div>
+              <h2 className="text-xl font-bold text-gray-900 tracking-tight animate-pulse">Memuat area...</h2>
+            </div>
+          )}
+
+          {/* No areas available state */}
+          {!loadingAreas && adminAreas.length === 0 && (
+            <div className="flex-1 flex flex-col items-center justify-center text-center">
+              <div className="w-32 h-32 bg-red-50 rounded-full flex items-center justify-center mb-6">
+                <AlertCircle className="w-14 h-14 text-red-400" />
+              </div>
+              <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">Tidak ada area</h2>
+              <p className="text-gray-500 font-medium mb-6 max-w-xs">
+                Admin tidak memiliki area untuk dikelola. Hubungi administrator untuk mengatur area.
+              </p>
+              <button
+                onClick={handleLogout}
+                className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold rounded-lg transition-all"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+
+          {(appState === 'idle' || appState === 'generated') && !loadingAreas && selectedAreaId && (
             <div className="flex bg-gray-100 p-1.5 rounded-2xl mb-10 mx-auto w-full max-w-sm shadow-inner">
               {/* <button
                 onClick={() => setVehicleType('motor')}
@@ -171,7 +258,8 @@ const Dashboard = () => {
             </div>
           )}
 
-          <div className="flex-1 flex flex-col items-center justify-center text-center">
+          {!loadingAreas && selectedAreaId && (
+            <div className="flex-1 flex flex-col items-center justify-center text-center">
 
             {/* Tampilan IDLE */}
             {appState === 'idle' && (
@@ -245,6 +333,7 @@ const Dashboard = () => {
             )}
 
           </div>
+          )}
         </div>
       </main>
     </div>
