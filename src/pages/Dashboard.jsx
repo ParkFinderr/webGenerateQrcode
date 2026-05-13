@@ -22,7 +22,7 @@ const Dashboard = () => {
   const [selectedAreaId, setSelectedAreaId] = useState(localStorage.getItem('selectedAreaId') || '');
   const [loadingAreas, setLoadingAreas] = useState(false);
 
-  const ticketId = ticketData?.guestSessionId || ticketData?.ticketId || null;
+  const ticketId = ticketData?.ticketId || null;
   const { status: firestoreStatus } = useTicketListener(ticketId);
 
   const formatTime = (seconds) => {
@@ -297,7 +297,7 @@ const Dashboard = () => {
 
                   <div className="border-4 border-emerald-50 rounded-3xl p-4">
                     <QRCodeSVG
-                      value={JSON.stringify({ guestSessionId: ticketData.guestSessionId || ticketData.ticketId || ticketData.qrCode })}
+                      value={ticketData.qrCode}
                       size={240}
                       level="H"
                       includeMargin={true}
