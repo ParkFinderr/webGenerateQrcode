@@ -297,7 +297,7 @@ const Dashboard = () => {
 
                   <div className="border-4 border-emerald-50 rounded-3xl p-4">
                     <QRCodeSVG
-                      value={ticketData.ticketId || ticketData.qrCode}
+                      value={ticketData.qrCode || ticketData.ticketId}
                       size={240}
                       level="H"
                       includeMargin={true}
