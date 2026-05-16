@@ -149,9 +149,9 @@ const Dashboard = () => {
   const isTimeRunningOut = timeLeft < 60;
 
   return (
-    <div className="min-h-screen bg-[#F4F7F6] flex flex-col font-sans selection:bg-emerald-200">
+    <div className="min-h-screen bg-pf-card flex flex-col font-sans selection:bg-emerald-200">
       {/* Header Navigation */}
-      <header className="bg-white/90 backdrop-blur-xl sticky top-0 z-10 px-6 sm:px-10 py-4 flex justify-between items-center shadow-sm border-b border-emerald-50">
+      <header className="bg-pf-card2/90 backdrop-blur-xl sticky top-0 z-10 px-6 sm:px-10 py-4 flex justify-between items-center shadow-sm border-b border-emerald-50">
         <div className="flex items-center space-x-4">
           <div className="bg-emerald-600 p-2.5 rounded-xl shadow-lg shadow-emerald-600/20">
             <QrCode className="w-6 h-6 text-white" />
@@ -203,7 +203,7 @@ const Dashboard = () => {
 
       {/* konten utama */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10">
-        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)] border border-emerald-50/50 w-full max-w-lg p-8 sm:p-12 min-h-[550px] flex flex-col relative overflow-hidden">
+        <div className="bg-pf-card rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)] border border-pf w-full max-w-lg p-8 sm:p-12 min-h-[550px] flex flex-col relative overflow-hidden">
 
           {/* Area selector message */}
           {!selectedAreaId && !loadingAreas && adminAreas.length > 0 && (

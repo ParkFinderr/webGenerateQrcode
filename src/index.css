@@ -1,4 +1,7 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* ── ParkFinder Dark Theme Override ── */
@@ -20,6 +23,11 @@
   --pf-orange:       #FFA726;
   --pf-shadow:       0 8px 32px rgba(0,0,0,0.4);
   --pf-shadow-glow:  0 0 24px rgba(0,210,255,0.2);
+  --bs-body-bg:      #0D1628;
+  --bs-body-color:   #8BA3BC;
+  --bs-border-color: #1E3A5F;
+  --bs-card-bg:      #132136;
+  --bs-card-border-color: #1E3A5F;
 }
 
 /* ── Base ── */
@@ -40,7 +48,7 @@ a { text-decoration: none; }
 ::-webkit-scrollbar-track { background: var(--pf-bg); }
 ::-webkit-scrollbar-thumb { background: var(--pf-border); border-radius: 3px; }
 
-/* ── Bootstrap card override (adapted for Tailwind) ── */
+/* ── Card override ── */
 .card {
   background: var(--pf-card) !important;
   border: 1px solid var(--pf-border) !important;
