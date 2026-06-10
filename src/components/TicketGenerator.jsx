@@ -51,26 +51,6 @@ const TicketGenerator = ({
             </p>
 
             <div className="form-group">
-              <label className="form-label">Jenis Kendaraan</label>
-              <div className="vehicle-grid">
-                <div
-                  className={`vehicle-card ${vehicleType === 'mobil' ? 'vehicle-card-active' : ''}`}
-                  onClick={() => setVehicleType('mobil')}
-                >
-                  <CarFront style={{ width: '28px', height: '28px' }} />
-                  <span style={{ fontSize: '14px' }}>Mobil</span>
-                </div>
-                <div
-                  className={`vehicle-card ${vehicleType === 'motor' ? 'vehicle-card-active' : ''}`}
-                  onClick={() => setVehicleType('motor')}
-                >
-                  <div style={{ fontSize: '28px', lineHeight: 1 }}>🏍️</div>
-                  <span style={{ fontSize: '14px' }}>Motor</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="form-group">
               <label className="form-label">Nomor Plat Kendaraan</label>
               <input
                 type="text"

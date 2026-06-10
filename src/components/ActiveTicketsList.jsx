@@ -2,7 +2,6 @@ import React from 'react';
 import {
   PlusCircle,
   QrCode,
-  CarFront,
   Copy,
   Trash2
 } from 'lucide-react';
@@ -62,11 +61,10 @@ const ActiveTicketsList = ({
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <table className="custom-table">
-            <thead>
+             <thead>
               <tr>
                 <th>Kode Tiket</th>
                 <th>Waktu Dibuat</th>
-                <th>Jenis Kendaraan</th>
                 <th>Pelat / Pengunjung</th>
                 <th>Status</th>
                 <th style={{ textAlign: 'center' }}>Aksi</th>
@@ -85,16 +83,6 @@ const ActiveTicketsList = ({
                       {ticket.qrCode || ticket.id}
                     </td>
                     <td>{dateStr}</td>
-                    <td>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {ticket.vehicleType === 'motor' ? (
-                          <span style={{ fontSize: '14px' }}>🏍️</span>
-                        ) : (
-                          <CarFront style={{ width: '14px', height: '14px', color: '#8BA3BC' }} />
-                        )}
-                        <span style={{ textTransform: 'capitalize' }}>{ticket.vehicleType || 'mobil'}</span>
-                      </span>
-                    </td>
                     <td>
                       <div style={{ fontWeight: '600' }}>{ticket.plateNumber || '-'}</div>
                       <div style={{ fontSize: '11px', color: '#8BA3BC' }}>{ticket.visitorName || ''}</div>

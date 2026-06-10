@@ -119,11 +119,7 @@ const DashboardOverview = ({
                         background: 'rgba(0, 210, 255, 0.08)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        {ticket.vehicleType === 'motor' ? (
-                          <span style={{ fontSize: '16px' }}>🏍️</span>
-                        ) : (
-                          <CarFront style={{ color: '#00D2FF', width: '18px', height: '18px' }} />
-                        )}
+                        <CarFront style={{ color: '#00D2FF', width: '18px', height: '18px' }} />
                       </div>
                       <div>
                         <p style={{ color: '#fff', fontWeight: '700', fontSize: '13px', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
