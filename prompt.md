@@ -1,261 +1,370 @@
-# Task DOC-0001 — README & Page Documentation Generator
+# FIX-0001 — Dashboard Statistics Always 0
 
 ## Context
 
 Project: **ParkFinder — Web QR Generator**
 
-Sebelum mengerjakan tugas ini, WAJIB membaca:
+BUG ditemukan setelah pengujian nyata:
 
-1. `agents.md`
-2. Seluruh hasil audit:
+```text
+Generate Ticket → BERHASIL
+QR Code → BERHASIL
+Scan Ticket → BERHASIL
+Claim Ticket → BERHASIL
+Gate Open → BERHASIL
+```
 
-   * 0002 Authentication Audit
-   * 0003 Generate Ticket Contract Verification
-   * 0004 QR Rendering & Verification
-   * 0005 Firestore Listener & Gate Open Verification
-   * 0006 Dashboard & Ticket Management Audit
-   * 0007 Ticket Cancellation Audit
-   * 0008 Multi Area Audit
-   * 0009 Error Recovery Audit
-   * 0010 Authorization Audit
-   * 0011 Feature Completeness Audit
+Namun Dashboard masih menunjukkan:
 
-Tujuan tugas ini adalah membuat dokumentasi final yang dapat digunakan untuk:
+```text
+Tiket Hari Ini = 0
+Tiket Aktif = 0
+Tiket Sukses = 0
+```
 
-* README project GitHub
-* Dokumentasi internal project
-* Referensi BAB 4 Skripsi
-* Daftar screenshot implementasi sistem
+Padahal tiket benar-benar dibuat dan sudah berhasil di-claim.
+
+Ini berarti audit 0006 kemungkinan memberikan kesimpulan yang tidak sesuai dengan kondisi aktual.
+
+---
+
+## WAJIB DIBACA SEBELUM MEMULAI
+
+1. agents.md
+2. Audit 0006
+3. Audit 0008
+4. Audit 0011
+
+Jangan langsung mengubah kode.
+
+Jangan membuat asumsi.
+
+Lakukan investigasi terlebih dahulu.
 
 ---
 
 ## Objective
 
-Buat dokumentasi lengkap mengenai:
-
-1. Deskripsi sistem
-2. Arsitektur singkat
-3. Daftar halaman
-4. Daftar komponen utama
-5. Daftar fitur
-6. Alur bisnis
-7. Daftar screenshot yang harus diambil
-8. Struktur project
-9. Teknologi yang digunakan
-
----
-
-## Step 1 — Inventory Page
-
-Identifikasi seluruh halaman pada project.
-
-Audit folder:
+Temukan ROOT CAUSE mengapa:
 
 ```text
-src/pages
-src/components
+Dashboard Overview
+- Tiket Hari Ini
+- Tiket Aktif
+- Tiket Sukses
 ```
 
-Tentukan:
+selalu bernilai 0.
+
+Setelah root cause ditemukan:
 
 ```text
-Halaman Utama
-Sub Tampilan
-Dialog
-Widget
+Perbaiki
+Verifikasi
+Buktikan
 ```
 
 ---
 
-## Step 2 — Page Documentation
+## Evidence
 
-Untuk setiap halaman buat dokumentasi:
-
-### Nama Halaman
-
-### Tujuan
-
-### Fitur
-
-### Endpoint yang digunakan
-
-### Komponen yang digunakan
-
-### Screenshot yang diperlukan
-
-Contoh format:
+Contoh kondisi aktual:
 
 ```text
-Halaman Login
+Generate Ticket → sukses
+Ticket muncul
+User scan tiket
+Ticket berhasil claimed
+Gate Open berjalan
 
-Tujuan:
-Autentikasi petugas gerbang.
+Expected:
+Tiket Hari Ini > 0
+Tiket Aktif > 0 atau berubah sesuai status
+Tiket Sukses > 0
 
-Fitur:
-- Login
-- Error Handling
-- Loading State
-
-Endpoint:
-POST /auth/login
-
-Screenshot:
-- Tampilan Login
-- Error Login
-- Loading Login
+Actual:
+Semua counter tetap 0
 ```
 
 ---
 
-## Step 3 — Screenshot Mapping
+## Investigation Step 1 — Firestore Reality Check
 
-Buat tabel:
+Cari source of truth.
 
-| No | Nama Screenshot | Halaman | Keterangan |
-| -- | --------------- | ------- | ---------- |
+Audit Firestore collection:
+
+```text
+tickets
+```
+
+Ambil contoh dokumen tiket terbaru.
+
+Tampilkan seluruh field aktual:
+
+```json
+{
+  "id": "...",
+  "status": "...",
+  "areaId": "...",
+  "createdAt": "...",
+  "...": "..."
+}
+```
+
+Jangan menebak.
+
+Gunakan data aktual.
+
+---
+
+## Investigation Step 2 — Dashboard Query Audit
+
+Audit:
+
+```text
+Dashboard.jsx
+```
+
+Cari:
+
+```javascript
+query(...)
+where(...)
+onSnapshot(...)
+```
+
+Verifikasi:
+
+1. Collection benar?
+2. Query benar?
+3. areaId benar?
+4. selectedAreaId benar?
+5. Snapshot benar-benar menerima data?
+
+Tambahkan logging sementara jika perlu.
+
+Buktikan jumlah dokumen yang diterima snapshot.
 
 Contoh:
 
-| 1 | Login Page | Login | Tampilan awal login |
-| 2 | Dashboard Overview | Dashboard | Statistik tiket |
-| 3 | QR Generated | Dashboard | QR berhasil dibuat |
-
-Tujuan tabel ini adalah mempermudah penyusunan BAB 4.
-
----
-
-## Step 4 — Feature Documentation
-
-Dokumentasikan seluruh fitur:
-
-### Authentication
-
-* Login
-* Logout
-* Session Management
-
-### Area Management
-
-* Dropdown Area
-* Area Persistence
-
-### Ticket Generator
-
-* Generate Ticket
-* QR Code
-* Copy Ticket
-* Countdown
-
-### Realtime Monitoring
-
-* Firestore Listener
-* Gate Open
-
-### Ticket Management
-
-* Active Ticket List
-* Cancel Ticket
-
----
-
-## Step 5 — Business Flow
-
-Buat diagram Mermaid:
-
-```mermaid
-flowchart TD
-Login
---> SelectArea
---> GenerateTicket
---> ShowQRCode
---> UserScan
---> VerifyTicket
---> Claimed
---> GateOpen
---> DashboardUpdate
+```javascript
+console.log(
+  'Dashboard Snapshot:',
+  snapshot.docs.length
+)
 ```
 
 ---
 
-## Step 6 — README Generation
+## Investigation Step 3 — Dashboard Overview Audit
 
-Generate file:
+Audit:
 
 ```text
-README.md
+DashboardOverview.jsx
 ```
 
-yang berisi:
+Cari logika:
 
-1. Project Overview
-2. Features
-3. Tech Stack
-4. Installation
-5. Environment Variables
-6. Folder Structure
-7. Business Flow
-8. API Integration
-9. Screenshot Section
-10. Current Status
+```javascript
+todayCount
+activeCount
+successCount
+```
 
----
+Verifikasi:
 
-## Step 7 — BAB 4 Mapping
+### Tiket Hari Ini
 
-Buat file:
+Audit:
+
+```javascript
+createdAt
+```
+
+Bandingkan:
 
 ```text
-documentation/page-mapping.md
+Format Firestore aktual
+vs
+Format yang diasumsikan kode
 ```
 
-Isi:
+Pastikan:
 
-### Halaman Login
+```javascript
+Timestamp
+Date
+String ISO
+```
 
-Screenshot:
-
-* Login Normal
-* Login Error
-
-Sub Bab Skripsi:
-
-* Implementasi Login
+ditangani dengan benar.
 
 ---
 
-### Dashboard Generator
+### Tiket Aktif
 
-Screenshot:
+Audit:
 
-* Dashboard
-* Statistik
-* Generate Tiket
-* QR Code
-* Gate Open
-* Active Ticket List
+```javascript
+status
+```
 
-Sub Bab Skripsi:
-
-* Implementasi Dashboard Generator
-
----
-
-## Deliverables
-
-Generate:
+Bandingkan:
 
 ```text
-README.md
-documentation/page-documentation.md
-documentation/page-mapping.md
+Status aktual Firestore
+vs
+Status yang dicari kode
 ```
+
+Contoh:
+
+```text
+pending
+active
+claimed
+cancelled
+expired
+```
+
+Cari mismatch.
+
+---
+
+### Tiket Sukses
+
+Audit:
+
+```javascript
+claimed
+```
+
+Pastikan status sukses benar-benar cocok dengan data Firestore.
+
+---
+
+## Investigation Step 4 — Data Flow Verification
+
+Verifikasi alur:
+
+```text
+Generate Ticket
+↓
+Firestore Create
+↓
+Dashboard Snapshot
+↓
+ticketsList
+↓
+DashboardOverview
+↓
+Counter
+```
+
+Tentukan titik mana yang gagal.
+
+---
+
+## Root Cause Report
+
+WAJIB menjawab:
+
+```text
+Mengapa semua counter 0?
+```
+
+Dengan bukti:
+
+1. Data Firestore aktual
+2. Data snapshot aktual
+3. Data yang diterima DashboardOverview
+4. Perbandingan sebelum dan sesudah
+
+---
+
+## Fix Implementation
+
+Setelah root cause ditemukan:
+
+Perbaiki kode.
+
+Jangan membuat workaround.
+
+Perbaiki penyebab utama.
+
+---
+
+## Verification
+
+Lakukan pengujian ulang:
+
+### Test 1
+
+Generate tiket baru.
+
+Expected:
+
+```text
+Tiket Hari Ini bertambah
+Tiket Aktif bertambah
+```
+
+---
+
+### Test 2
+
+Claim tiket.
+
+Expected:
+
+```text
+Tiket Aktif berkurang
+Tiket Sukses bertambah
+```
+
+---
+
+### Test 3
+
+Ganti area.
+
+Expected:
+
+```text
+Counter mengikuti area aktif
+```
+
+---
+
+## Deliverable
+
+Buat laporan:
+
+```text
+FIX-0001-dashboard-statistics.md
+```
+
+Wajib berisi:
+
+1. Root Cause Analysis
+2. Firestore Actual Structure
+3. Dashboard Query Analysis
+4. Dashboard Overview Analysis
+5. Code Changes
+6. Before vs After
+7. Verification Results
+8. Validation Checklist
 
 ---
 
 ## Success Criteria
 
-* Seluruh halaman teridentifikasi.
-* Seluruh fitur terdokumentasi.
-* README siap publish.
-* Daftar screenshot siap digunakan untuk BAB 4.
-* Dokumentasi sesuai implementasi aktual project.
+* Root cause ditemukan.
+* Dashboard tidak lagi menampilkan 0 palsu.
+* Tiket Hari Ini akurat.
+* Tiket Aktif akurat.
+* Tiket Sukses akurat.
+* Data sesuai kondisi Firestore aktual.
+* Verifikasi menggunakan tiket nyata, bukan data dummy.

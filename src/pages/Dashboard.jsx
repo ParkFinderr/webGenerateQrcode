@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/axios';
 import { useTicketListener } from '../hooks/useTicketListener';
-import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, or, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 // Sub-components
@@ -103,7 +103,14 @@ const Dashboard = () => {
     setLoadingTickets(true);
     setFirestoreError(null);
     const ticketsRef = collection(db, 'tickets');
-    const q = query(ticketsRef, where('areaId', '==', selectedAreaId));
+    const areaRef = doc(db, 'areas', selectedAreaId);
+    const q = query(
+      ticketsRef,
+      or(
+        where('areaId', '==', selectedAreaId),
+        where('areaId', '==', areaRef)
+      )
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const tickets = [];
