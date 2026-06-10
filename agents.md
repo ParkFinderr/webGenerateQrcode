@@ -146,3 +146,36 @@ VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
+
+
+IMPORTANT
+
+Jangan membuat laporan terlebih dahulu.
+
+Lakukan proses berikut secara berurutan:
+
+1. Audit source code.
+2. Audit endpoint/API.
+3. Jalankan pengujian aktual.
+4. Kumpulkan bukti.
+5. Verifikasi hasil.
+6. Temukan bug atau mismatch.
+7. Baru buat laporan markdown.
+
+Dilarang menulis bagian:
+- Executive Summary
+- Known Issues
+- Recommendations
+- Validation Checklist
+
+sebelum seluruh verifikasi selesai.
+
+Setiap klaim harus memiliki salah satu:
+- source code evidence
+- API response evidence
+- Firestore evidence
+- runtime test evidence
+
+Jika bukti tidak tersedia, tulis:
+"Belum terverifikasi."
+dan jangan membuat kesimpulan.

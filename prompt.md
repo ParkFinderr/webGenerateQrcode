@@ -1,227 +1,261 @@
-# Task 0003 — QR Rendering & Verification Audit
-
-## Objective
-
-Memastikan QR Code yang dihasilkan oleh Web QR Generator benar-benar valid dan dapat digunakan oleh seluruh client ParkFinder (Web User, PWA, dan Mobile App).
-
-Lakukan verifikasi end-to-end terhadap QR yang dihasilkan.
-
-Jangan melakukan asumsi berdasarkan kode.
-
-Gunakan ticket real untuk pengujian.
-
----
+# Task DOC-0001 — README & Page Documentation Generator
 
 ## Context
 
-Saat ini audit telah memverifikasi:
+Project: **ParkFinder — Web QR Generator**
 
-✅ Login Flow
+Sebelum mengerjakan tugas ini, WAJIB membaca:
 
-✅ Generate Ticket Contract
+1. `agents.md`
+2. Seluruh hasil audit:
 
-✅ Area Loading
+   * 0002 Authentication Audit
+   * 0003 Generate Ticket Contract Verification
+   * 0004 QR Rendering & Verification
+   * 0005 Firestore Listener & Gate Open Verification
+   * 0006 Dashboard & Ticket Management Audit
+   * 0007 Ticket Cancellation Audit
+   * 0008 Multi Area Audit
+   * 0009 Error Recovery Audit
+   * 0010 Authorization Audit
+   * 0011 Feature Completeness Audit
 
-✅ Ticket Lifecycle
+Tujuan tugas ini adalah membuat dokumentasi final yang dapat digunakan untuk:
 
-Namun belum ada bukti bahwa QR yang dihasilkan benar-benar dapat dipindai dan diverifikasi oleh sistem lain.
-
-QR merupakan inti bisnis aplikasi.
-
-Jika QR tidak valid maka seluruh flow parkir gagal.
-
----
-
-## Requirements
-
-### 1. QR Generation Audit
-
-Audit:
-
-```txt
-src/components/TicketGenerator.jsx
-```
-
-Verifikasi:
-
-```jsx
-<QRCodeSVG
-  value={ticketData.qrCode || ticketData.ticketId}
-/>
-```
-
-Pastikan value yang digunakan berasal dari backend.
+* README project GitHub
+* Dokumentasi internal project
+* Referensi BAB 4 Skripsi
+* Daftar screenshot implementasi sistem
 
 ---
 
-### 2. Generated QR Verification
+## Objective
 
-Generate ticket baru menggunakan aplikasi.
+Buat dokumentasi lengkap mengenai:
 
-Dokumentasikan response aktual:
-
-```json
-{
-  "ticketId": "...",
-  "qrCode": "...",
-  "status": "pending"
-}
-```
-
-Catat nilai QR yang dihasilkan.
+1. Deskripsi sistem
+2. Arsitektur singkat
+3. Daftar halaman
+4. Daftar komponen utama
+5. Daftar fitur
+6. Alur bisnis
+7. Daftar screenshot yang harus diambil
+8. Struktur project
+9. Teknologi yang digunakan
 
 ---
 
-### 3. QR Content Verification
+## Step 1 — Inventory Page
 
-Verifikasi isi QR menggunakan scanner.
+Identifikasi seluruh halaman pada project.
 
-Pastikan QR berisi:
+Audit folder:
 
-```txt
-PF-xxxxxxxxxxxxxxxx
+```text
+src/pages
+src/components
 ```
 
-dan bukan:
+Tentukan:
 
-```txt
-JSON
-URL
-String tambahan
-Object serialize
+```text
+Halaman Utama
+Sub Tampilan
+Dialog
+Widget
 ```
-
-Dokumentasikan hasil scan aktual.
 
 ---
 
-### 4. Cross Platform Scan Test
+## Step 2 — Page Documentation
 
-Uji QR menggunakan:
+Untuk setiap halaman buat dokumentasi:
 
-```txt
-Mobile Android
-PWA
-Web User
+### Nama Halaman
+
+### Tujuan
+
+### Fitur
+
+### Endpoint yang digunakan
+
+### Komponen yang digunakan
+
+### Screenshot yang diperlukan
+
+Contoh format:
+
+```text
+Halaman Login
+
+Tujuan:
+Autentikasi petugas gerbang.
+
+Fitur:
+- Login
+- Error Handling
+- Loading State
+
+Endpoint:
+POST /auth/login
+
+Screenshot:
+- Tampilan Login
+- Error Login
+- Loading Login
 ```
-
-Verifikasi bahwa hasil scan identik.
 
 ---
 
-### 5. Backend Verification Test
+## Step 3 — Screenshot Mapping
 
-Gunakan hasil scan untuk memanggil:
+Buat tabel:
 
-```http
-POST /access/verify
-```
+| No | Nama Screenshot | Halaman | Keterangan |
+| -- | --------------- | ------- | ---------- |
 
-Payload:
+Contoh:
 
-```json
-{
-  "qrCode": "PF-xxxxxxxxxxxxxxxx"
-}
-```
+| 1 | Login Page | Login | Tampilan awal login |
+| 2 | Dashboard Overview | Dashboard | Statistik tiket |
+| 3 | QR Generated | Dashboard | QR berhasil dibuat |
 
-Verifikasi response backend.
-
-Dokumentasikan seluruh field yang dikembalikan.
+Tujuan tabel ini adalah mempermudah penyusunan BAB 4.
 
 ---
 
-### 6. Ticket Status Transition Audit
+## Step 4 — Feature Documentation
 
-Setelah verify berhasil:
+Dokumentasikan seluruh fitur:
 
-Verifikasi perubahan status:
+### Authentication
 
-```txt
-pending
-↓
-claimed
-```
+* Login
+* Logout
+* Session Management
 
-Pastikan perubahan terjadi di backend.
+### Area Management
 
----
+* Dropdown Area
+* Area Persistence
 
-### 7. Firestore Synchronization Check
+### Ticket Generator
 
-Audit apakah perubahan status tiket:
+* Generate Ticket
+* QR Code
+* Copy Ticket
+* Countdown
 
-```txt
-pending
-↓
-claimed
-```
+### Realtime Monitoring
 
-juga muncul pada dokumen Firestore yang dipantau generator.
+* Firestore Listener
+* Gate Open
 
-Dokumentasikan:
+### Ticket Management
 
-- collection
-- document
-- field yang berubah
+* Active Ticket List
+* Cancel Ticket
 
 ---
 
-### 8. Failure Case Audit
+## Step 5 — Business Flow
 
-Uji:
+Buat diagram Mermaid:
 
-```txt
-QR tidak valid
-QR sudah digunakan
-QR expired
-QR random string
+```mermaid
+flowchart TD
+Login
+--> SelectArea
+--> GenerateTicket
+--> ShowQRCode
+--> UserScan
+--> VerifyTicket
+--> Claimed
+--> GateOpen
+--> DashboardUpdate
 ```
-
-Verifikasi response backend.
 
 ---
 
-## Validation Checklist
+## Step 6 — README Generation
 
-- [ ] QR berhasil dihasilkan
-- [ ] Isi QR tervalidasi
-- [ ] QR tidak berisi JSON
-- [ ] QR tidak berisi URL
-- [ ] QR berhasil dipindai
-- [ ] POST /access/verify berhasil
-- [ ] Status berubah menjadi claimed
-- [ ] Firestore ikut berubah
-- [ ] Failure case terdokumentasi
+Generate file:
+
+```text
+README.md
+```
+
+yang berisi:
+
+1. Project Overview
+2. Features
+3. Tech Stack
+4. Installation
+5. Environment Variables
+6. Folder Structure
+7. Business Flow
+8. API Integration
+9. Screenshot Section
+10. Current Status
+
+---
+
+## Step 7 — BAB 4 Mapping
+
+Buat file:
+
+```text
+documentation/page-mapping.md
+```
+
+Isi:
+
+### Halaman Login
+
+Screenshot:
+
+* Login Normal
+* Login Error
+
+Sub Bab Skripsi:
+
+* Implementasi Login
+
+---
+
+### Dashboard Generator
+
+Screenshot:
+
+* Dashboard
+* Statistik
+* Generate Tiket
+* QR Code
+* Gate Open
+* Active Ticket List
+
+Sub Bab Skripsi:
+
+* Implementasi Dashboard Generator
 
 ---
 
 ## Deliverables
 
-Buat laporan:
+Generate:
 
-```txt
-update/0004-qr-rendering-verification.md
+```text
+README.md
+documentation/page-documentation.md
+documentation/page-mapping.md
 ```
-
-Laporan wajib berisi:
-
-- generated ticket sample
-- QR content verification
-- scan verification
-- verify endpoint response
-- status transition
-- firestore synchronization
-- failure cases
-- known issues
-- executive summary
 
 ---
 
 ## Success Criteria
 
-- QR terbukti valid secara end-to-end
-- Mobile dapat memverifikasi ticket hasil generator
-- Status ticket berubah sesuai kontrak backend
-- Firestore menerima update
-- Tidak ada mismatch antara QR Generator dan Mobile/PWA
+* Seluruh halaman teridentifikasi.
+* Seluruh fitur terdokumentasi.
+* README siap publish.
+* Daftar screenshot siap digunakan untuk BAB 4.
+* Dokumentasi sesuai implementasi aktual project.
