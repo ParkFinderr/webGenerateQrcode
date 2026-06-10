@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { LogOut, QrCode, CheckCircle, CarFront, AlertCircle } from 'lucide-react';
+import { LogOut, QrCode, CheckCircle, CarFront, AlertCircle, Copy, Check } from 'lucide-react';
 import api from '../config/axios';
 import { useTicketListener } from '../hooks/useTicketListener';
 
@@ -16,9 +16,23 @@ const Dashboard = () => {
   const [ticketData, setTicketData] = useState(null);
   const [vehicleType, setVehicleType] = useState('mobil');
   const [timeLeft, setTimeLeft] = useState(600);
+  const [copied, setCopied] = useState(false);
 
   const ticketId = ticketData?.ticketId || null;
   const { status: firestoreStatus } = useTicketListener(ticketId);
+
+  const handleCopyTicketCode = async () => {
+    if (!ticketData?.qrCode) return;
+    try {
+      await navigator.clipboard.writeText(ticketData.qrCode);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy ticket code:', err);
+    }
+  };
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -92,6 +106,7 @@ const Dashboard = () => {
 
     setAppState('loading');
     setTimeLeft(600);
+    setCopied(false);
     try {
       const response = await api.post('/gate/generateTicket', {
         areaId: user.managedAreaId,
@@ -203,7 +218,7 @@ const Dashboard = () => {
             {/* Tampilan GENERATED (Kartu QR) */}
             {appState === 'generated' && ticketData && (
               <div className="flex flex-col items-center animate-in fade-in zoom-in duration-500 w-full mt-2">
-                <div className="bg-white p-5 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.08)] border border-gray-100 mb-8 relative">
+                <div className="bg-white p-5 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.08)] border border-gray-100 mb-8 relative animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="absolute -left-4 top-1/2 -mt-4 w-8 h-8 bg-[#F4F7F6] rounded-full border-r border-gray-100"></div>
                   <div className="absolute -right-4 top-1/2 -mt-4 w-8 h-8 bg-[#F4F7F6] rounded-full border-l border-gray-100"></div>
 
@@ -215,6 +230,26 @@ const Dashboard = () => {
                       includeMargin={true}
                       className="rounded-xl"
                     />
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-dashed border-gray-200 flex flex-col items-center w-full">
+                    <span className="text-xs text-gray-400 font-bold tracking-wider uppercase mb-2">Kode Tiket</span>
+                    <div className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-2xl p-3 w-full group hover:border-emerald-200 transition-all duration-300">
+                      <span className="font-mono text-sm font-semibold text-gray-600 break-all select-all text-left flex-1 mr-3 pr-2">
+                        {ticketData.qrCode}
+                      </span>
+                      <button
+                        onClick={handleCopyTicketCode}
+                        className={`p-2 rounded-xl transition-all duration-300 flex items-center justify-center shrink-0 cursor-pointer ${
+                          copied
+                            ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+                            : 'bg-white border border-gray-200 text-gray-400 hover:text-emerald-600 hover:border-emerald-200 hover:shadow-sm'
+                        }`}
+                        title="Salin Kode Tiket"
+                      >
+                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
