@@ -3,151 +3,140 @@
 [![React 19](https://img.shields.io/badge/React-19.0.0-blue.svg)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8.0.16-violet.svg)](https://vite.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.0.0-38bdf8.svg)](https://tailwindcss.com/)
-[![Firebase](https://img.shields.io/badge/Firebase-11.0.0-ffca28.svg?logo=firebase)](https://firebase.google.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-12.12.1-ffca28.svg?logo=firebase)](https://firebase.google.com/)
 
-**Web QR Generator** adalah subsistem frontend kiosk/desktop dari ekosistem **ParkFinder** (Platform Manajemen Parkir). Aplikasi web ini dirancang khusus untuk berjalan di komputer gerbang masuk parkir, memungkinkan petugas/admin gerbang mencetak atau menayangkan e-tiket masuk berbasis QR Code secara instan, serta memantau status palang pintu secara real-time.
-
----
-
-## 1. Project Overview
-Aplikasi ini ditujukan bagi petugas gerbang masuk parkir. Fungsinya meliputi:
-- Pembuatan tiket masuk instan untuk kendaraan mobil/motor.
-- Penayangan QR Code statis yang berisi plain string tiket ID untuk dipindai oleh pengunjung (via Web User atau Mobile PWA).
-- Sinkronisasi status tiket secara real-time dengan Firestore database. Jika tiket berhasil diverifikasi oleh pengunjung, gerbang akan secara otomatis menampilkan visualisasi palang pintu terbuka selama 3 detik sebelum kembali ke mode idle.
+**Web QR Generator** adalah subsistem frontend kiosk/desktop dari platform **ParkFinder** (Manajemen Parkir). Dirancang khusus untuk berjalan di komputer kiosk pintu gerbang masuk parkir, aplikasi ini memungkinkan petugas/admin gerbang mencetak e-tiket masuk berbasis QR Code secara instan dan memantau status gerbang secara real-time.
 
 ---
 
-## 2. Features
-- **Aman dengan JWT**: Sesi login/logout terproteksi token JWT yang dikirimkan via header Authorization Axios.
-- **Pemuatan Area Cerdas**: Area gerbang dapat dipilih lewat dropdown selector di header dan otomatis di-cache ke dalam penyimpanan lokal (`localStorage`).
-- **Generator Tiket Instan**: Form generate tiket masuk yang mengirim payload parameter areaId ke REST API.
-- **Render QR Code Murni**: QR Code SVG statis yang dibuat berisi *plain string ID* tiket tanpa embel-embel JSON atau URL, menjamin kompatibilitas verifikasi multi-platform.
-- **Countdown Timer**: Tiket masuk yang dibuat memiliki sisa waktu aktif selama 10 menit (600 detik).
-- **Real-time Gate Controller**: Menggunakan Firestore `onSnapshot` listener untuk memantau perubahan status tiket tunggal dan memicu animasi gerbang terbuka 3 detik.
+## 1. Inventori Halaman (Page Directory)
+
+Aplikasi ini menggunakan arsitektur Single Page Application (SPA) minimalis dengan rute terproteksi. Berikut adalah daftar halaman yang ada di project ini:
+
+### 🔑 1. Halaman Login (`/login`)
+*   **Komponen**: `src/pages/Login.jsx`
+*   **Fungsi**: Autentikasi petugas pintu gerbang masuk parkir sebelum diizinkan mengakses panel kontrol generator.
+*   **Fitur**:
+    *   Form autentikasi email & password dengan penanganan loading spinner saat proses otentikasi.
+    *   Error handling visual berupa banner peringatan jika kredensial salah atau terjadi kesalahan jaringan.
+    *   Pemuatan area otomatis dari endpoint API REST setelah login berhasil untuk kemudian di-cache secara lokal.
+
+### 📊 2. Halaman Dashboard Kiosk Utama (`/`)
+*   **Komponen**: `src/pages/Dashboard.jsx` (Rute Terproteksi)
+*   **Fungsi**: Halaman utama yang mengoordinasikan status login, selektor gerbang wilayah parkir aktif, dan memuat penayangan pencetak tiket.
+*   **Fitur**:
+    *   **Header Control**: Selektor dropdown area gerbang aktif yang menyimpan status pilihan ke `localStorage` (`selectedAreaId`).
+    *   **Kiosk Module Integration**: Merender langsung komponen utama **`TicketGenerator.jsx`** secara penuh di tengah layar.
 
 ---
 
-## 3. Tech Stack
-- **Library Utama**: React 19 (JavaScript)
-- **Bundler & Dev Server**: Vite
-- **Styling & Theme**: TailwindCSS v4 & Custom CSS variables
-- **HTTP Client**: Axios (dengan Request Interceptor JWT)
-- **Real-time Sync**: Firebase Client SDK v11 (Cloud Firestore)
-- **Ikon UI**: Lucide React
-- **QR Code Rendering**: `qrcode.react` (QRCodeSVG)
+## 2. Struktur Alur Generator & Deteksi Gerbang (`TicketGenerator.jsx`)
 
----
+Komponen `TicketGenerator` yang dimuat pada halaman utama mengadopsi 4 status tampilan utama (*State-driven UI*):
 
-## 4. Installation
-Ikuti langkah-langkah berikut untuk menjalankan project secara lokal:
-
-1. **Clone repository**:
-   ```bash
-   git clone https://github.com/username/webGenerateQrcode.git
-   cd webGenerateQrcode
-   ```
-
-2. **Instal dependensi**:
-   ```bash
-   npm install
-   ```
-
-3. **Jalankan dev server**:
-   ```bash
-   npm run dev
-   ```
-
-4. **Build untuk produksi**:
-   ```bash
-   npm run build
-   ```
-
----
-
-## 5. Environment Variables
-Buat file `.env` di direktori root project untuk konfigurasi integrasi Firebase dan API:
-
-```env
-# URL API Backend ParkFinder
-VITE_API_BASE_URL=https://backend-api-services-173368161554.asia-southeast2.run.app
-
-# Firebase Configuration
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-VITE_FIREBASE_APP_ID=your_firebase_app_id
+```mermaid
+stateDiagram-v2
+    [*] --> Idle : Pilih Area Gerbang
+    Idle --> Loading : Klik "Generate Tiket Mobil"
+    Loading --> Generated : Sukses POST /gate/generateTicket
+    Generated --> Claimed : Status Tiket = "claimed" (Firestore Sync)
+    Claimed --> Idle : Delay 3 Detik (Autoreset)
 ```
 
+1.  **Tampilan IDLE**:
+    *   Form tombol inisiasi pembuatan e-tiket masuk kendaraan.
+2.  **Tampilan LOADING**:
+    *   Animasi loading spinner saat mengirimkan request API pembuatan tiket baru ke backend.
+3.  **Tampilan GENERATED (QR Code Tampil)**:
+    *   Menampilkan QR Code SVG yang berisi **Plain String ID Tiket Murni** (misal: `PF-1778311698768-9a9162aa`).
+    *   Menampilkan rincian metadata tiket (tipe kendaraan, plat nomor jika terdaftar, nama pengunjung, dan jam pembuatan).
+    *   **Countdown Timer**: Penghitung mundur masa berlaku tiket selama 10 menit (600 detik).
+    *   **Cancel & Reset**: Tombol membatalkan tiket langsung ke Firestore database (`status: "cancelled"`) dan tombol selesai untuk mereset layar kembali ke mode Idle.
+4.  **Tampilan CLAIMED (Pintu Terbuka)**:
+    *   Menggunakan Firestore `onSnapshot` real-time listener untuk memantau perubahan status dokumen tiket.
+    *   Jika status berubah menjadi `claimed` (karena pengunjung memindai dan melakukan booking via Web User/Mobile), antarmuka akan memicu visualisasi sukses **"Gerbang Terbuka"** berwarna hijau selama 3 detik sebelum otomatis mereset diri kembali ke tampilan Idle.
+
 ---
 
-## 6. Folder Structure
-Struktur direktori utama aplikasi ini dirancang teratur untuk kemudahan pemeliharaan:
+## 3. Tech Stack & Dependencies
+
+*   **Framework**: React 19 (JavaScript)
+*   **Tooling/Bundler**: Vite & Rolldown
+*   **Styling**: TailwindCSS v4
+*   **HTTP Client**: Axios (dengan Interceptor JWT terotomatisasi)
+*   **Real-time Sync**: Firebase SDK v12 (Cloud Firestore Client)
+*   **Ikon UI**: Lucide React
+*   **QR Generator**: `qrcode.react` (QRCodeSVG)
+
+---
+
+## 4. Struktur Folder Project
+
+Struktur folder utama dirancang terstruktur dan terisolasi untuk kemudahan pemeliharaan:
 
 ```text
 webGenerateQrcode/
-├── public/                     # Asset statis publik
+├── public/                     # Asset statis
 ├── src/
 │   ├── components/             # Reusable UI Components
-│   │   └── TicketGenerator.jsx     # Form generator & visual palang gerbang
-│   ├── config/                 # Konfigurasi library pihak ketiga
-│   │   ├── axios.js                # Setup base URL & interceptor token JWT
-│   │   └── firebase.js             # Inisialisasi Firebase & Firestore db
+│   │   └── TicketGenerator.jsx     # Modul generator tiket & animasi pintu gerbang
+│   ├── config/                 # Konfigurasi library & instansiasi pihak ketiga
+│   │   ├── axios.js                # Setup base URL Axios & Interceptor header JWT
+│   │   └── firebase.js             # Setup inisialisasi Firebase & Firestore db
 │   ├── hooks/                  # Custom React Hooks
-│   │   └── useTicketListener.js    # Firestore onSnapshot ticket listener
+│   │   └── useTicketListener.js    # Firestore onSnapshot listener
 │   ├── pages/                  # Halaman Router level
-│   │   ├── Dashboard.jsx           # Main page controller & layout
-│   │   └── Login.jsx               # Form login admin gerbang
-│   ├── App.css                 # Style global tambahan
-│   ├── App.jsx                 # Setup Routing & Protected Route
-│   ├── index.css               # Setup Tailwind & CSS custom variable theme
-│   ├── main.jsx                # React DOM entry point
-│   └── assets/
+│   │   ├── Dashboard.jsx           # Main page controller & dropdown area selector
+│   │   └── Login.jsx               # Halaman autentikasi admin gerbang
+│   ├── App.css                 # Global custom styles
+│   ├── App.jsx                 # Setup Routing & Protected Route guard
+│   ├── index.css               # Import Tailwind & CSS custom variable theme
+│   └── main.jsx                # React DOM entry point
 ├── package.json
 └── vite.config.js
 ```
 
 ---
 
-## 7. Business Flow
-Alur integrasi transaksi tiket masuk digital ParkFinder digambarkan dalam diagram berikut:
+## 5. Cara Instalasi & Menjalankan Project
 
-```mermaid
-flowchart TD
-    Login[Login Petugas] --> SelectArea[Pilih Area Gerbang]
-    SelectArea --> GenerateTicket[Generate Tiket Baru]
-    GenerateTicket --> ShowQRCode[Tampilkan QR Code SVG]
-    ShowQRCode --> UserScan[Pengunjung Scan QR]
-    UserScan --> VerifyTicket[Verifikasi Tiket via REST API]
-    VerifyTicket --> Claimed[Status Tiket Berubah: claimed]
-    Claimed --> GateOpen[Animasi Gerbang Terbuka 3s]
-    GateOpen --> Reset[Otomatis Reset ke Idle]
-```
+### Prerequisites
+*   Node.js versi LTS (`v18` atau yang lebih baru direkomendasikan)
+*   NPM / Yarn
 
----
+### Langkah Setup
 
-## 8. API Integration
-Berikut adalah ringkasan API endpoint yang terintegrasi di Web QR Generator:
+1.  **Clone repository & masuk ke direktori**:
+    ```bash
+    cd webGenerateQrcode
+    ```
 
-| Method | Endpoint | Auth | Fungsi |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/auth/login` | No | Validasi email/password petugas dan memberikan JWT. |
-| `POST` | `/auth/logout` | Yes | Memutus sesi token di sisi server. |
-| `GET` | `/areas` | Yes | Memuat seluruh daftar wilayah parkir aktif. |
-| `POST` | `/gate/generateTicket` | Yes | Menginisiasi tiket masuk baru dengan status `pending` di area tertentu. |
+2.  **Instal dependensi**:
+    ```bash
+    npm install
+    ```
 
----
+3.  **Konfigurasi Environment**:
+    Buat file `.env.local` pada root project dengan isi:
+    ```env
+    # URL API REST Backend
+    VITE_API_BASE_URL=https://backend-api-services-173368161554.asia-southeast2.run.app
 
-## 9. Screenshot Section
-Untuk melengkapi penyusunan berkas dokumentasi atau BAB 4 Skripsi, berikut adalah daftar rancangan tangkapan layar sistem yang dapat diambil:
+    # Firebase SDK config
+    VITE_FIREBASE_API_KEY=your_firebase_api_key
+    VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+    VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+    VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+    VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+    VITE_FIREBASE_APP_ID=your_firebase_app_id
+    ```
 
-1. **Halaman Login**: Menampilkan form autentikasi petugas masuk.
-2. **Form Generator (Idle)**: Tampilan tombol inisiasi generate tiket.
-3. **QR Code Tampil (Generated)**: QR Code statis murni dengan timer countdown 10 menit.
-4. **Sukses Pintu Terbuka (Claimed)**: Visual sukses gerbang terbuka setelah tiket berhasil di-scan.
+4.  **Jalankan Server Development**:
+    ```bash
+    npm run dev
+    ```
 
----
-
-## 10. Current Status
-Aplikasi telah selesai dikembangkan secara fungsional. Fitur pembuatan tiket, rendering QR, dan monitoring realtime visual palang pintu terbuka berjalan normal. Seluruh skenario alur utama telah teruji sukses dan siap dideploy ke lingkungan produksi.
+5.  **Build untuk Produksi**:
+    ```bash
+    npm run build
+    ```
