@@ -26,6 +26,7 @@ const Dashboard = () => {
   });
 
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [firestoreError, setFirestoreError] = useState(null);
 
   const [ticketsList, setTicketsList] = useState([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
@@ -100,6 +101,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (!selectedAreaId) return;
     setLoadingTickets(true);
+    setFirestoreError(null);
     const ticketsRef = collection(db, 'tickets');
     const q = query(ticketsRef, where('areaId', '==', selectedAreaId));
 
@@ -122,6 +124,7 @@ const Dashboard = () => {
       setLoadingTickets(false);
     }, (err) => {
       console.error("Gagal mendengarkan daftar tiket:", err);
+      setFirestoreError(err.message || String(err));
       setLoadingTickets(false);
     });
 
@@ -403,6 +406,26 @@ const Dashboard = () => {
               fontSize: '14px',
             }}>
               Silahkan pilih area dari dropdown di header untuk mengaktifkan fitur kontrol.
+            </div>
+          )}
+
+          {/* Firestore connection error warning */}
+          {firestoreError && (
+            <div style={{
+              width: '100%', marginBottom: '24px',
+              padding: '16px 20px',
+              background: 'rgba(239,83,80,0.1)',
+              border: '1px solid rgba(239,83,80,0.3)',
+              borderRadius: '12px', color: '#EF5350',
+              fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px'
+            }}>
+              <AlertCircle style={{ width: '18px', height: '18px', flexShrink: 0 }} />
+              <div>
+                <strong>Gagal memuat data dari Firestore:</strong> {firestoreError}. 
+                <span style={{ color: '#8BA3BC', marginLeft: '6px' }}>
+                  Mohon pastikan environment variables Firebase di Vercel sudah di-set dengan benar, lalu redeploy project Anda.
+                </span>
+              </div>
             </div>
           )}
 
