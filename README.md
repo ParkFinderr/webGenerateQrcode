@@ -14,7 +14,6 @@ Aplikasi ini ditujukan bagi petugas gerbang masuk parkir. Fungsinya meliputi:
 - Pembuatan tiket masuk instan untuk kendaraan mobil/motor.
 - Penayangan QR Code statis yang berisi plain string tiket ID untuk dipindai oleh pengunjung (via Web User atau Mobile PWA).
 - Sinkronisasi status tiket secara real-time dengan Firestore database. Jika tiket berhasil diverifikasi oleh pengunjung, gerbang akan secara otomatis menampilkan visualisasi palang pintu terbuka selama 3 detik sebelum kembali ke mode idle.
-- Dashboard statistik aktivitas harian dan daftar tiket aktif di area gerbang tersebut.
 
 ---
 
@@ -24,9 +23,7 @@ Aplikasi ini ditujukan bagi petugas gerbang masuk parkir. Fungsinya meliputi:
 - **Generator Tiket Instan**: Form generate tiket masuk yang mengirim payload parameter areaId ke REST API.
 - **Render QR Code Murni**: QR Code SVG statis yang dibuat berisi *plain string ID* tiket tanpa embel-embel JSON atau URL, menjamin kompatibilitas verifikasi multi-platform.
 - **Countdown Timer**: Tiket masuk yang dibuat memiliki sisa waktu aktif selama 10 menit (600 detik).
-- **Real-time Gate Controller**: Menggunakan Firestore `onSnapshot` listener untuk memantau perubahan status tiket dan memicu animasi gerbang terbuka 3 detik.
-- **Tabel Tiket Aktif**: Memantau daftar tiket yang aktif dan belum di-scan, serta fitur pembatalan tiket.
-- **Dashboard Overview**: Counter dinamis (Tiket Hari Ini, Tiket Aktif, Tiket Sukses) dan log riwayat aktivitas.
+- **Real-time Gate Controller**: Menggunakan Firestore `onSnapshot` listener untuk memantau perubahan status tiket tunggal dan memicu animasi gerbang terbuka 3 detik.
 
 ---
 
@@ -93,9 +90,6 @@ webGenerateQrcode/
 ├── public/                     # Asset statis publik
 ├── src/
 │   ├── components/             # Reusable UI Components
-│   │   ├── ActiveTicketsList.jsx   # List tabel tiket aktif
-│   │   ├── DashboardOverview.jsx   # Kartu stats & aktivitas terbaru
-│   │   ├── StatusBadge.jsx         # Status indicator badge
 │   │   └── TicketGenerator.jsx     # Form generator & visual palang gerbang
 │   ├── config/                 # Konfigurasi library pihak ketiga
 │   │   ├── axios.js                # Setup base URL & interceptor token JWT
@@ -103,7 +97,7 @@ webGenerateQrcode/
 │   ├── hooks/                  # Custom React Hooks
 │   │   └── useTicketListener.js    # Firestore onSnapshot ticket listener
 │   ├── pages/                  # Halaman Router level
-│   │   ├── Dashboard.jsx           # Main page controller & sidebar layout
+│   │   ├── Dashboard.jsx           # Main page controller & layout
 │   │   └── Login.jsx               # Form login admin gerbang
 │   ├── App.css                 # Style global tambahan
 │   ├── App.jsx                 # Setup Routing & Protected Route
@@ -128,7 +122,7 @@ flowchart TD
     UserScan --> VerifyTicket[Verifikasi Tiket via REST API]
     VerifyTicket --> Claimed[Status Tiket Berubah: claimed]
     Claimed --> GateOpen[Animasi Gerbang Terbuka 3s]
-    GateOpen --> DashboardUpdate[Statistik & List Terupdate Real-time]
+    GateOpen --> Reset[Otomatis Reset ke Idle]
 ```
 
 ---
@@ -149,13 +143,11 @@ Berikut adalah ringkasan API endpoint yang terintegrasi di Web QR Generator:
 Untuk melengkapi penyusunan berkas dokumentasi atau BAB 4 Skripsi, berikut adalah daftar rancangan tangkapan layar sistem yang dapat diambil:
 
 1. **Halaman Login**: Menampilkan form autentikasi petugas masuk.
-2. **Dashboard Overview**: Menampilkan data statistik tiket hari ini dan aktivitas terbaru.
-3. **Form Generator (Idle)**: Tampilan tombol inisiasi generate tiket.
-4. **QR Code Tampil (Generated)**: QR Code statis murni dengan timer countdown 10 menit.
-5. **Sukses Pintu Terbuka (Claimed)**: Visual sukses gerbang terbuka setelah tiket berhasil di-scan.
-6. **Daftar Tiket Aktif**: Tabel data list tiket pending yang sedang berjalan.
+2. **Form Generator (Idle)**: Tampilan tombol inisiasi generate tiket.
+3. **QR Code Tampil (Generated)**: QR Code statis murni dengan timer countdown 10 menit.
+4. **Sukses Pintu Terbuka (Claimed)**: Visual sukses gerbang terbuka setelah tiket berhasil di-scan.
 
 ---
 
 ## 10. Current Status
-Aplikasi telah selesai dikembangkan secara fungsional. Fitur pembuatan tiket, rendering QR, monitoring realtime, statistik dashboard, dan area caching berjalan normal. Seluruh skenario alur utama telah teruji sukses dan siap dideploy ke lingkungan produksi.
+Aplikasi telah selesai dikembangkan secara fungsional. Fitur pembuatan tiket, rendering QR, dan monitoring realtime visual palang pintu terbuka berjalan normal. Seluruh skenario alur utama telah teruji sukses dan siap dideploy ke lingkungan produksi.
