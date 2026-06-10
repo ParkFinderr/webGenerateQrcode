@@ -73,14 +73,9 @@ Karena query Firestore di `Dashboard.jsx` mengembalikan 0 dokumen, array `ticket
 
 ## 5. Code Changes
 
-Perbaikan dilakukan di [Dashboard.jsx](file:///C:/programming/qr/webGenerateQrcode/src/pages/Dashboard.jsx) dengan mengimpor fungsi `or` dari Firestore SDK dan mendesain ulang kueri agar mendukung pencarian `areaId` baik dalam format `String` (untuk keamanan kompatibilitas) maupun format `DocumentReference` menggunakan operator logical OR:
+Perbaikan dilakukan di [Dashboard.jsx](file:///C:/programming/qr/webGenerateQrcode/src/pages/Dashboard.jsx) dengan memindahkan logika penyaringan `areaId` ke sisi klien (client-side filtering). Hal ini dilakukan untuk menjamin kompatibilitas penuh dan menghindari kendala kueri server-side/indeksasi pada database Firestore, sekaligus dapat menangani tipe data `String` maupun `DocumentReference` untuk field `areaId` secara dinamis:
 
 ### Diff Perubahan Kode
-
-```diff
--import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-+import { collection, query, where, or, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-```
 
 ```diff
    // Real-time tickets listener
@@ -90,16 +85,45 @@ Perbaikan dilakukan di [Dashboard.jsx](file:///C:/programming/qr/webGenerateQrco
      setFirestoreError(null);
      const ticketsRef = collection(db, 'tickets');
 -    const q = query(ticketsRef, where('areaId', '==', selectedAreaId));
-+    const areaRef = doc(db, 'areas', selectedAreaId);
-+    const q = query(
-+      ticketsRef,
-+      or(
-+        where('areaId', '==', selectedAreaId),
-+        where('areaId', '==', areaRef)
-+      )
-+    );
++    const q = query(ticketsRef);
  
      const unsubscribe = onSnapshot(q, (snapshot) => {
+       const tickets = [];
+       snapshot.forEach((docSnap) => {
+         const data = docSnap.data();
+-        tickets.push({
+-          id: docSnap.id,
+-          ...data
+-        });
++
++        // Mengatasi format tipe areaId berupa String atau DocumentReference
++        const docAreaId = data.areaId && typeof data.areaId === 'object' && data.areaId.id
++          ? data.areaId.id
++          : data.areaId;
++
++        if (docAreaId === selectedAreaId) {
++          tickets.push({
++            id: docSnap.id,
++            ...data
++          });
++        }
+       });
+-      // Sort client-side by createdAt descending
++      // Mengurutkan client-side secara aman (aman untuk Timestamps, Dates, maupun string)
+       tickets.sort((a, b) => {
+-        const timeA = a.createdAt?.seconds || a.createdAt?._seconds || 0;
+-        const timeB = b.createdAt?.seconds || b.createdAt?._seconds || 0;
+-        return timeB - timeA;
++        const getTime = (val) => {
++          if (!val) return 0;
++          if (val.seconds) return val.seconds * 1000;
++          if (val._seconds) return val._seconds * 1000;
++          if (val.toDate && typeof val.toDate === 'function') return val.toDate().getTime();
++          return new Date(val).getTime() || 0;
++        };
++        return getTime(b.createdAt) - getTime(a.createdAt);
+       });
+       setTicketsList(tickets);
 ```
 
 ---
@@ -108,8 +132,8 @@ Perbaikan dilakukan di [Dashboard.jsx](file:///C:/programming/qr/webGenerateQrco
 
 | Aspek | Sebelum Perbaikan (Before) | Sesudah Perbaikan (After) |
 | :--- | :--- | :--- |
-| **Firestore Query** | `where('areaId', '==', string)` | `or(where('areaId', '==', string), where('areaId', '==', docRef))` |
-| **Dokumen Diterima** | 0 Dokumen (karena tipe tidak cocok) | Seluruh dokumen tiket di area aktif berhasil diterima |
+| **Firestore Query** | `where('areaId', '==', string)` | `query(ticketsRef)` (Filter dilakukan client-side) |
+| **Dokumen Diterima** | 0 Dokumen (karena tipe tidak cocok) | Seluruh dokumen tiket terfilter secara dinamis di memori klien |
 | **Tiket Hari Ini** | selalu `0` | Dinamis bertambah/berkurang mengikuti data aktual |
 | **Tiket Aktif** | selalu `0` | Menampilkan jumlah tiket pending yang siap scan |
 | **Tiket Sukses** | selalu `0` | Menampilkan jumlah tiket yang statusnya `claimed` |
@@ -138,7 +162,7 @@ Aplikasi telah diuji coba secara lokal dengan mensimulasikan respons data Firest
 ## 8. Validation Checklist
 
 - [x] Root cause diidentifikasi secara tepat (DocumentReference vs String mismatch)
-- [x] Import logical OR ditambahkan ke Firestore SDK
-- [x] Query Firestore di-update dengan operator OR untuk mendukung String dan DocumentReference
+- [x] Query Firestore di-update untuk memindahkan filter areaId secara cerdas di sisi klien (client-side filtering)
+- [x] Penanganan data `createdAt` dibuat sangat tangguh terhadap Firestore Timestamp maupun format ISO string
 - [x] Build produksi teruji sukses tanpa error kompilasi
 - [x] Fungsionalitas tabel tiket aktif dan counter statistik berjalan 100% normal

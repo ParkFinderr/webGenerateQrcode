@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/axios';
 import { useTicketListener } from '../hooks/useTicketListener';
-import { collection, query, where, or, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 // Sub-components
@@ -103,29 +103,35 @@ const Dashboard = () => {
     setLoadingTickets(true);
     setFirestoreError(null);
     const ticketsRef = collection(db, 'tickets');
-    const areaRef = doc(db, 'areas', selectedAreaId);
-    const q = query(
-      ticketsRef,
-      or(
-        where('areaId', '==', selectedAreaId),
-        where('areaId', '==', areaRef)
-      )
-    );
+    const q = query(ticketsRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const tickets = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        tickets.push({
-          id: docSnap.id,
-          ...data
-        });
+        
+        // Handle both String and DocumentReference formats for areaId
+        const docAreaId = data.areaId && typeof data.areaId === 'object' && data.areaId.id
+          ? data.areaId.id
+          : data.areaId;
+
+        if (docAreaId === selectedAreaId) {
+          tickets.push({
+            id: docSnap.id,
+            ...data
+          });
+        }
       });
-      // Sort client-side by createdAt descending
+      // Sort client-side by createdAt descending (robust to Timestamps, Dates, or strings)
       tickets.sort((a, b) => {
-        const timeA = a.createdAt?.seconds || a.createdAt?._seconds || 0;
-        const timeB = b.createdAt?.seconds || b.createdAt?._seconds || 0;
-        return timeB - timeA;
+        const getTime = (val) => {
+          if (!val) return 0;
+          if (val.seconds) return val.seconds * 1000;
+          if (val._seconds) return val._seconds * 1000;
+          if (val.toDate && typeof val.toDate === 'function') return val.toDate().getTime();
+          return new Date(val).getTime() || 0;
+        };
+        return getTime(b.createdAt) - getTime(a.createdAt);
       });
       setTicketsList(tickets);
       setLoadingTickets(false);
