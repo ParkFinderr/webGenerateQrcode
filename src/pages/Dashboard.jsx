@@ -1,4 +1,4 @@
-import { AlertCircle, CarFront, CheckCircle, LogOut, QrCode } from 'lucide-react';
+import { AlertCircle, CarFront, CheckCircle, LogOut, QrCode, Copy, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [ticketData, setTicketData] = useState(null);
   const [vehicleType, setVehicleType] = useState('mobil');
   const [timeLeft, setTimeLeft] = useState(600);
+  const [copied, setCopied] = useState(false);
 
   const [adminAreas, setAdminAreas] = useState([]);
   const [selectedAreaId, setSelectedAreaId] = useState(localStorage.getItem('selectedAreaId') || '');
@@ -87,7 +88,7 @@ const Dashboard = () => {
 
   const handleGenerateTicket = async () => {
     if (!selectedAreaId) { alert('Silahkan pilih area terlebih dahulu.'); return; }
-    setAppState('loading'); setTimeLeft(600);
+    setAppState('loading'); setTimeLeft(600); setCopied(false);
     try {
       const response = await api.post('/gate/generateTicket', { areaId: selectedAreaId, vehicleType });
       if (response.data?.data) { setTicketData(response.data.data); setAppState('generated'); }
@@ -96,6 +97,18 @@ const Dashboard = () => {
       console.error('Gagal generate tiket:', err);
       alert(err.response?.data?.message || 'Gagal generate tiket');
       setAppState('idle');
+    }
+  };
+
+  const handleCopyTicketCode = async () => {
+    const code = ticketData?.qrCode || ticketData?.ticketId;
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Gagal menyalin kode tiket:', err);
     }
   };
 
@@ -379,10 +392,13 @@ const Dashboard = () => {
                   <div style={{
                     background: '#ffffff',
                     borderRadius: '20px',
-                    padding: '20px',
+                    padding: '20px 20px 16px 20px',
                     marginBottom: '24px',
                     boxShadow: '0 16px 40px rgba(0,0,0,0.4)',
                     position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                   }}>
                     <QRCodeSVG
                       value={ticketData.qrCode || ticketData.ticketId}
@@ -390,6 +406,74 @@ const Dashboard = () => {
                       level="H"
                       includeMargin={true}
                     />
+
+                    {/* Divider */}
+                    <div style={{
+                      width: '100%',
+                      height: '1px',
+                      borderTop: '1px dashed #E2E8F0',
+                      margin: '16px 0',
+                    }} />
+
+                    {/* Ticket Code Display & Copy */}
+                    <div style={{
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}>
+                      <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Kode Tiket
+                      </span>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        background: '#F8FAFC',
+                        border: '1px solid #E2E8F0',
+                        borderRadius: '10px',
+                        padding: '8px 12px',
+                        width: '100%',
+                        maxWidth: '220px',
+                      }}>
+                        <span style={{
+                          fontFamily: 'monospace',
+                          fontSize: '13px',
+                          fontWeight: '700',
+                          color: '#1E293B',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          marginRight: '8px',
+                        }}>
+                          {ticketData.qrCode || ticketData.ticketId}
+                        </span>
+                        <button
+                          onClick={handleCopyTicketCode}
+                          title="Salin Kode"
+                          style={{
+                            background: copied ? '#DCFCE7' : '#E2E8F0',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseOver={e => { if (!copied) e.currentTarget.style.background = '#CBD5E1'; }}
+                          onMouseOut={e => { if (!copied) e.currentTarget.style.background = '#E2E8F0'; }}
+                        >
+                          {copied ? (
+                            <Check style={{ width: '14px', height: '14px', color: '#16A34A' }} />
+                          ) : (
+                            <Copy style={{ width: '14px', height: '14px', color: '#475569' }} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Timer */}
