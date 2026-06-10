@@ -26,8 +26,6 @@ const Dashboard = () => {
   });
 
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [plateNumber, setPlateNumber] = useState('');
-  const [visitorName, setVisitorName] = useState('');
 
   const [ticketsList, setTicketsList] = useState([]);
   const [loadingTickets, setLoadingTickets] = useState(false);
@@ -145,23 +143,8 @@ const Dashboard = () => {
       const response = await api.post('/gate/generateTicket', { areaId: selectedAreaId, vehicleType });
       if (response.data?.data) {
         const generated = response.data.data;
-        if (plateNumber || visitorName) {
-          try {
-            const ticketRef = doc(db, 'tickets', generated.ticketId);
-            await updateDoc(ticketRef, {
-              plateNumber: plateNumber.toUpperCase(),
-              visitorName: visitorName,
-            });
-            generated.plateNumber = plateNumber.toUpperCase();
-            generated.visitorName = visitorName;
-          } catch (fsErr) {
-            console.warn('Gagal mengupdate detail kendaraan ke Firestore:', fsErr);
-          }
-        }
         setTicketData(generated);
         setAppState('generated');
-        setPlateNumber('');
-        setVisitorName('');
       }
       else throw new Error('Format respons tidak valid');
     } catch (err) {
@@ -486,11 +469,6 @@ const Dashboard = () => {
                   ticketData={ticketData}
                   setTicketData={setTicketData}
                   vehicleType={vehicleType}
-                  setVehicleType={setVehicleType}
-                  plateNumber={plateNumber}
-                  setPlateNumber={setPlateNumber}
-                  visitorName={visitorName}
-                  setVisitorName={setVisitorName}
                   handleGenerateTicket={handleGenerateTicket}
                   handleCopyTicketCode={handleCopyTicketCode}
                   copied={copied}

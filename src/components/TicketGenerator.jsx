@@ -17,11 +17,6 @@ const TicketGenerator = ({
   ticketData,
   setTicketData,
   vehicleType,
-  setVehicleType,
-  plateNumber,
-  setPlateNumber,
-  visitorName,
-  setVisitorName,
   handleGenerateTicket,
   handleCopyTicketCode,
   copied,
@@ -47,31 +42,8 @@ const TicketGenerator = ({
               Generate QR Tiket
             </h2>
             <p style={{ color: '#8BA3BC', fontSize: '13px', marginBottom: '24px', textAlign: 'center' }}>
-              Lengkapi data kendaraan di bawah ini untuk membuat tiket masuk.
+              Klik tombol di bawah untuk menghasilkan tiket masuk mobil secara instan.
             </p>
-
-            <div className="form-group">
-              <label className="form-label">Nomor Plat Kendaraan</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Contoh: B 1234 ABC"
-                value={plateNumber}
-                onChange={e => setPlateNumber(e.target.value)}
-                style={{ textTransform: 'uppercase' }}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Nama Pengunjung (Opsional)</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Contoh: Budi Santoso"
-                value={visitorName}
-                onChange={e => setVisitorName(e.target.value)}
-              />
-            </div>
 
             <button
               onClick={handleGenerateTicket}
@@ -85,11 +57,16 @@ const TicketGenerator = ({
                 fontFamily: "'Inter', sans-serif",
                 transition: 'all 0.2s',
                 marginTop: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
               }}
               onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,210,255,0.45)'; }}
               onMouseOut={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,210,255,0.3)'; }}
             >
-              Generate QR Tiket
+              <CarFront style={{ width: '18px', height: '18px' }} />
+              Generate Tiket Mobil
             </button>
           </div>
         )}

@@ -65,7 +65,6 @@ const ActiveTicketsList = ({
               <tr>
                 <th>Kode Tiket</th>
                 <th>Waktu Dibuat</th>
-                <th>Pelat / Pengunjung</th>
                 <th>Status</th>
                 <th style={{ textAlign: 'center' }}>Aksi</th>
               </tr>
@@ -83,10 +82,6 @@ const ActiveTicketsList = ({
                       {ticket.qrCode || ticket.id}
                     </td>
                     <td>{dateStr}</td>
-                    <td>
-                      <div style={{ fontWeight: '600' }}>{ticket.plateNumber || '-'}</div>
-                      <div style={{ fontSize: '11px', color: '#8BA3BC' }}>{ticket.visitorName || ''}</div>
-                    </td>
                     <td>
                       <StatusBadge status={ticket.status} />
                     </td>
